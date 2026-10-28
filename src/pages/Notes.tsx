@@ -498,7 +498,7 @@ export function Notes({ data }: { data: AppData }) {
             <span className="hint">
               {kchars(scale.charsRead)} из {kchars(scale.charsTotal)} знаков · {scale.read} из {scale.total} разделов
               {scale.filesDone > 0 && ` · файлов целиком: ${scale.filesDone}`}
-              {focus && ` · без конспектов вне плана ${data.program?.company}`}
+              {focus && ' · без конспектов вне программы'}
             </span>
           </div>
           <div className="progress-track">

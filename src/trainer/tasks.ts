@@ -152,7 +152,7 @@ export const CODE_TASKS: CodeTask[] = [
     "fn": "useDebounce",
     "title": "useDebounce",
     "card": null,
-    "statement": "    Напиши хук `useDebounce(value, delay)`: возвращает значение `value`, но обновляет его только через `delay` миллисекунд после **последнего** изменения.\n\n    - Сначала возвращает то же значение, что пришло.\n    - Новое значение раньше срока — отсчёт начинается заново.\n\n    Применение: `const query = useDebounce(input, 300)` — запрос уходит, когда человек перестал печатать.\n\n\nХуки доступны без импорта, но `import { useState } from 'react'` тоже работает. JSX и TypeScript можно.",
+    "statement": "Напиши хук `useDebounce(value, delay)`: возвращает значение `value`, но обновляет его только через `delay` миллисекунд после **последнего** изменения.\n\n- Сначала возвращает то же значение, что пришло.\n- Новое значение раньше срока — отсчёт начинается заново.\n\nПрименение: `const query = useDebounce(input, 300)` — запрос уходит, когда человек перестал печатать.\n\n\nХуки доступны без импорта, но `import { useState } from 'react'` тоже работает. JSX и TypeScript можно.",
     "starter": "function useDebounce(value, delay) {\n  \n}\n",
     "tests": [
       {
@@ -193,7 +193,7 @@ export const CODE_TASKS: CodeTask[] = [
     "fn": "usePrevious",
     "title": "usePrevious",
     "card": null,
-    "statement": "    Напиши хук `usePrevious(value)`: возвращает значение, которое было на **прошлом** рендере. На первом рендере — `undefined`.\n\n    Применение: сравнить новый проп со старым — «цена выросла или упала».\n\n\nХуки доступны без импорта, но `import { useState } from 'react'` тоже работает. JSX и TypeScript можно.",
+    "statement": "Напиши хук `usePrevious(value)`: возвращает значение, которое было на **прошлом** рендере. На первом рендере — `undefined`.\n\nПрименение: сравнить новый проп со старым — «цена выросла или упала».\n\n\nХуки доступны без импорта, но `import { useState } from 'react'` тоже работает. JSX и TypeScript можно.",
     "starter": "function usePrevious(value) {\n  \n}\n",
     "tests": [
       {
@@ -224,7 +224,7 @@ export const CODE_TASKS: CodeTask[] = [
     "fn": "useFetch",
     "title": "useFetch с отменой запроса",
     "card": null,
-    "statement": "    Напиши хук `useFetch(url, fetcher)`.\n\n    - `fetcher(url, signal)` возвращает промис с данными, `signal` — от `AbortController`.\n    - Хук возвращает `{ data, error, loading }`. Сначала `data` и `error` — `null`, `loading` — `true`.\n    - Успех — `data` из ответа, `loading: false`. Ошибка — `error` (сам объект ошибки), `data: null`, `loading: false`.\n    - Сменился `url` — новый запрос, а **прошлый отменяется** через `abort()`. Ответ на устаревший запрос не должен попасть в `data`.\n    - При размонтировании запрос тоже отменяется. Отмена — не ошибка: `error` из-за неё не появляется.\n\n\nХуки доступны без импорта, но `import { useState } from 'react'` тоже работает. JSX и TypeScript можно.",
+    "statement": "Напиши хук `useFetch(url, fetcher)`.\n\n- `fetcher(url, signal)` возвращает промис с данными, `signal` — от `AbortController`.\n- Хук возвращает `{ data, error, loading }`. Сначала `data` и `error` — `null`, `loading` — `true`.\n- Успех — `data` из ответа, `loading: false`. Ошибка — `error` (сам объект ошибки), `data: null`, `loading: false`.\n- Сменился `url` — новый запрос, а **прошлый отменяется** через `abort()`. Ответ на устаревший запрос не должен попасть в `data`.\n- При размонтировании запрос тоже отменяется. Отмена — не ошибка: `error` из-за неё не появляется.\n\n\nХуки доступны без импорта, но `import { useState } from 'react'` тоже работает. JSX и TypeScript можно.",
     "starter": "function useFetch(url, fetcher) {\n  \n}\n",
     "tests": [
       {
@@ -279,7 +279,7 @@ export const CODE_TASKS: CodeTask[] = [
     "fn": "useLocalStorage",
     "title": "useLocalStorage",
     "card": null,
-    "statement": "    Напиши хук `useLocalStorage(key, initial, storage)`: как `useState`, только значение живёт в хранилище.\n\n    - Возвращает `[value, setValue]`.\n    - При первом рендере читает `storage.getItem(key)`: есть значение — `JSON.parse`, нет или битый JSON — `initial`. Хранилище читается **один раз**, а не на каждый рендер.\n    - Каждое новое значение записывается: `storage.setItem(key, JSON.stringify(value))`.\n    - `setValue` принимает и функцию: `setValue((n) => n + 1)`, и два таких вызова подряд дают `+2`.\n    - `storage` передаётся аргументом: в тестах это подделка, в жизни — `localStorage`.\n\n\nХуки доступны без импорта, но `import { useState } from 'react'` тоже работает. JSX и TypeScript можно.",
+    "statement": "Напиши хук `useLocalStorage(key, initial, storage)`: как `useState`, только значение живёт в хранилище.\n\n- Возвращает `[value, setValue]`.\n- При первом рендере читает `storage.getItem(key)`: есть значение — `JSON.parse`, нет или битый JSON — `initial`. Хранилище читается **один раз**, а не на каждый рендер.\n- Каждое новое значение записывается: `storage.setItem(key, JSON.stringify(value))`.\n- `setValue` принимает и функцию: `setValue((n) => n + 1)`, и два таких вызова подряд дают `+2`.\n- `storage` передаётся аргументом: в тестах это подделка, в жизни — `localStorage`.\n\n\nХуки доступны без импорта, но `import { useState } from 'react'` тоже работает. JSX и TypeScript можно.",
     "starter": "function useLocalStorage(key, initial, storage) {\n  \n}\n",
     "tests": [
       {
@@ -323,7 +323,7 @@ export const CODE_TASKS: CodeTask[] = [
     "fn": "useCountdown",
     "title": "useCountdown на setInterval",
     "card": null,
-    "statement": "    Напиши хук `useCountdown(from, ms = 1000)`: обратный отсчёт.\n\n    - Возвращает число, которое начинается с `from` и уменьшается на 1 каждые `ms` миллисекунд.\n    - Дошёл до `0` — останавливается: ниже нуля не уходит, и **интервал снимается**.\n    - При размонтировании интервал тоже снимается.\n    - Значения идут подряд: `3, 2, 1, 0`, без застревания на одном числе.\n\n    Здесь легко попасть на «устаревшее замыкание» — подумай, какое значение видит колбэк интервала.\n\n\nХуки доступны без импорта, но `import { useState } from 'react'` тоже работает. JSX и TypeScript можно.",
+    "statement": "Напиши хук `useCountdown(from, ms = 1000)`: обратный отсчёт.\n\n- Возвращает число, которое начинается с `from` и уменьшается на 1 каждые `ms` миллисекунд.\n- Дошёл до `0` — останавливается: ниже нуля не уходит, и **интервал снимается**.\n- При размонтировании интервал тоже снимается.\n- Значения идут подряд: `3, 2, 1, 0`, без застревания на одном числе.\n\nЗдесь легко попасть на «устаревшее замыкание» — подумай, какое значение видит колбэк интервала.\n\n\nХуки доступны без импорта, но `import { useState } from 'react'` тоже работает. JSX и TypeScript можно.",
     "starter": "function useCountdown(from, ms = 1000) {\n  \n}\n",
     "tests": [
       {
@@ -356,7 +356,7 @@ export const CODE_TASKS: CodeTask[] = [
     "fn": "TodoList",
     "title": "Список задач",
     "card": null,
-    "statement": "    Напиши компонент `TodoList` — список задач.\n\n    - `<input>` для текста и кнопка «Добавить».\n    - По клику задача добавляется в конец списка `<ul>` как `<li>`. Пустая строка и одни пробелы не добавляются, пробелы по краям обрезаются. После добавления поле очищается.\n    - В каждом `<li>` — текст задачи в `<span>` и кнопка «Удалить», которая убирает **эту** задачу.\n    - Под списком — `<p>` с текстом «Всего: N».\n\n\nХуки доступны без импорта, но `import { useState } from 'react'` тоже работает. JSX и TypeScript можно. Тесты ищут элементы по тегам и ролям, поэтому разметку держи такой, как в условии.",
+    "statement": "Напиши компонент `TodoList` — список задач.\n\n- `<input>` для текста и кнопка «Добавить».\n- По клику задача добавляется в конец списка `<ul>` как `<li>`. Пустая строка и одни пробелы не добавляются, пробелы по краям обрезаются. После добавления поле очищается.\n- В каждом `<li>` — текст задачи в `<span>` и кнопка «Удалить», которая убирает **эту** задачу.\n- Под списком — `<p>` с текстом «Всего: N».\n\n\nХуки доступны без импорта, но `import { useState } from 'react'` тоже работает. JSX и TypeScript можно. Тесты ищут элементы по тегам и ролям, поэтому разметку держи такой, как в условии.",
     "starter": "function TodoList() {\n  \n}\n",
     "tests": [
       {
@@ -399,7 +399,7 @@ export const CODE_TASKS: CodeTask[] = [
     "fn": "Tabs",
     "title": "Доступные вкладки",
     "card": null,
-    "statement": "    Напиши компонент `Tabs({ tabs })`, где `tabs` — массив `{ id, title, content }`. Вкладки должны быть доступны для экранных дикторов и клавиатуры — это то, что спрашивают про ARIA.\n\n    - Кнопки вкладок лежат в контейнере с `role=\"tablist\"`. Каждая кнопка — `role=\"tab\"`, с `aria-selected` (`true` или `false`) и `aria-controls`, равным `panel-<id>`.\n    - Под ними одна панель: `role=\"tabpanel\"`, `id` — `panel-<id>` активной вкладки, внутри — её `content`.\n    - Сначала активна первая вкладка, клик по вкладке делает её активной.\n    - Стрелки `→` и `←` на вкладке (`onKeyDown`) переключают на соседнюю, по кругу.\n\n\nХуки доступны без импорта, но `import { useState } from 'react'` тоже работает. JSX и TypeScript можно. Тесты ищут элементы по тегам и ролям, поэтому разметку держи такой, как в условии.",
+    "statement": "Напиши компонент `Tabs({ tabs })`, где `tabs` — массив `{ id, title, content }`. Вкладки должны быть доступны для экранных дикторов и клавиатуры — это то, что спрашивают про ARIA.\n\n- Кнопки вкладок лежат в контейнере с `role=\"tablist\"`. Каждая кнопка — `role=\"tab\"`, с `aria-selected` (`true` или `false`) и `aria-controls`, равным `panel-<id>`.\n- Под ними одна панель: `role=\"tabpanel\"`, `id` — `panel-<id>` активной вкладки, внутри — её `content`.\n- Сначала активна первая вкладка, клик по вкладке делает её активной.\n- Стрелки `→` и `←` на вкладке (`onKeyDown`) переключают на соседнюю, по кругу.\n\n\nХуки доступны без импорта, но `import { useState } from 'react'` тоже работает. JSX и TypeScript можно. Тесты ищут элементы по тегам и ролям, поэтому разметку держи такой, как в условии.",
     "starter": "function Tabs({ tabs }) {\n  \n}\n",
     "tests": [
       {
@@ -461,7 +461,7 @@ export const CODE_TASKS: CodeTask[] = [
     "fn": "UserCard",
     "title": "Переписать классовый компонент на хуки",
     "card": null,
-    "statement": "    Легаси: классовый компонент `UserCard` грузит пользователя по `id`. Перепиши его **функциональным компонентом с хуками**, сохранив поведение.\n\n    - `props.load(id)` возвращает промис с `{ name }`.\n    - Пока данных нет — `<p>Загрузка…</p>`, потом `<p>` с именем.\n    - Сменился `id` — загрузка заново.\n    - Ответ для старого `id` не должен попасть на экран, если `id` уже сменился.\n\n    Подумай, какому хуку соответствуют `componentDidMount`, `componentDidUpdate` и `componentWillUnmount` вместе.\n\n\nХуки доступны без импорта, но `import { useState } from 'react'` тоже работает. JSX и TypeScript можно.",
+    "statement": "Легаси: классовый компонент `UserCard` грузит пользователя по `id`. Перепиши его **функциональным компонентом с хуками**, сохранив поведение.\n\n- `props.load(id)` возвращает промис с `{ name }`.\n- Пока данных нет — `<p>Загрузка…</p>`, потом `<p>` с именем.\n- Сменился `id` — загрузка заново.\n- Ответ для старого `id` не должен попасть на экран, если `id` уже сменился.\n\nПодумай, какому хуку соответствуют `componentDidMount`, `componentDidUpdate` и `componentWillUnmount` вместе.\n\n\nХуки доступны без импорта, но `import { useState } from 'react'` тоже работает. JSX и TypeScript можно.",
     "starter": "class UserCard extends Component {\n  state = { user: null }\n\n  componentDidMount() {\n    this.load()\n  }\n\n  componentDidUpdate(prevProps) {\n    if (prevProps.id !== this.props.id) this.load()\n  }\n\n  componentWillUnmount() {\n    this.cancelled = true\n  }\n\n  load() {\n    const id = this.props.id\n    this.setState({ user: null })\n    this.props.load(id).then((user) => {\n      // Пока грузили, компонент могли убрать или сменить id\n      if (!this.cancelled && id === this.props.id) this.setState({ user })\n    })\n  }\n\n  render() {\n    if (!this.state.user) return <p>Загрузка…</p>\n    return <p>{this.state.user.name}</p>\n  }\n}\n",
     "tests": [
       {
@@ -500,7 +500,7 @@ export const CODE_TASKS: CodeTask[] = [
     "fn": "ProductList",
     "title": "Оптимизация: лишние рендеры строк",
     "card": null,
-    "statement": "    Компонент работает, но медленно на длинном списке: при выборе одного товара перерисовываются **все** строки, и даже кнопка «Обновить», которая к строкам отношения не имеет, перерисовывает их все.\n\n    Оптимизируй, не меняя поведения и разметки:\n\n    - при выборе товара перерисовываются только две строки — та, что была выбрана, и новая;\n    - кнопка «Обновить» не перерисовывает строки вовсе.\n\n    Каждый рендер строки вызывает `onRender(id)` — по нему тесты и считают рендеры. Проговори вслух, почему сейчас перерисовывается всё, и только потом правь.\n\n\nХуки доступны без импорта, но `import { useState } from 'react'` тоже работает. JSX и TypeScript можно.",
+    "statement": "Компонент работает, но медленно на длинном списке: при выборе одного товара перерисовываются **все** строки, и даже кнопка «Обновить», которая к строкам отношения не имеет, перерисовывает их все.\n\nОптимизируй, не меняя поведения и разметки:\n\n- при выборе товара перерисовываются только две строки — та, что была выбрана, и новая;\n- кнопка «Обновить» не перерисовывает строки вовсе.\n\nКаждый рендер строки вызывает `onRender(id)` — по нему тесты и считают рендеры. Проговори вслух, почему сейчас перерисовывается всё, и только потом правь.\n\n\nХуки доступны без импорта, но `import { useState } from 'react'` тоже работает. JSX и TypeScript можно.",
     "starter": "function ProductList({ products, onRender }) {\n  const [selectedId, setSelectedId] = useState(null)\n  const [ticks, setTicks] = useState(0)\n\n  return (\n    <div>\n      <button onClick={() => setTicks(ticks + 1)}>Обновить ({ticks})</button>\n      <ul>\n        {products.map((p) => (\n          <Row\n            key={p.id}\n            product={p}\n            selectedId={selectedId}\n            onSelect={(id) => setSelectedId(id)}\n            onRender={onRender}\n          />\n        ))}\n      </ul>\n    </div>\n  )\n}\n\nfunction Row({ product, selectedId, onSelect, onRender }) {\n  onRender(product.id) // для тестов: отмечает каждый рендер строки\n  const selected = product.id === selectedId\n  return (\n    <li>\n      {product.title} {selected ? '✓' : ''}\n      <button aria-pressed={selected} onClick={() => onSelect(product.id)}>\n        Выбрать\n      </button>\n    </li>\n  )\n}\n",
     "tests": [
       {
@@ -555,7 +555,7 @@ export const CODE_TASKS: CodeTask[] = [
     "fn": "Stopwatch",
     "title": "Ревью: секундомер",
     "card": null,
-    "statement": "    Код на ревью: секундомер. «Старт» запускает, «Пауза» останавливает, «Сброс» обнуляет. Проп `tick` — длина «секунды» в миллисекундах, чтобы тесты не ждали по-настоящему.\n\n    В коде **две ошибки**: из-за одной секундомер застревает, из-за другой его нельзя остановить, а таймеры копятся. Найди обе глазами и проговори, почему так происходит, потом исправь и запусти тесты.\n\n\nХуки доступны без импорта, но `import { useState } from 'react'` тоже работает. JSX и TypeScript можно.",
+    "statement": "Код на ревью: секундомер. «Старт» запускает, «Пауза» останавливает, «Сброс» обнуляет. Проп `tick` — длина «секунды» в миллисекундах, чтобы тесты не ждали по-настоящему.\n\nВ коде **две ошибки**: из-за одной секундомер застревает, из-за другой его нельзя остановить, а таймеры копятся. Найди обе глазами и проговори, почему так происходит, потом исправь и запусти тесты.\n\n\nХуки доступны без импорта, но `import { useState } from 'react'` тоже работает. JSX и TypeScript можно.",
     "starter": "function Stopwatch({ tick = 1000 }) {\n  const [seconds, setSeconds] = useState(0)\n  const [running, setRunning] = useState(false)\n\n  useEffect(() => {\n    if (!running) return\n    setInterval(() => {\n      setSeconds(seconds + 1)\n    }, tick)\n  }, [running])\n\n  return (\n    <div>\n      <p>{seconds} с</p>\n      <button onClick={() => setRunning(!running)}>{running ? 'Пауза' : 'Старт'}</button>\n      <button\n        onClick={() => {\n          setRunning(false)\n          setSeconds(0)\n        }}\n      >\n        Сброс\n      </button>\n    </div>\n  )\n}\n",
     "tests": [
       {
@@ -588,7 +588,7 @@ export const CODE_TASKS: CodeTask[] = [
     "fn": "ShoppingList",
     "title": "Ревью: список покупок",
     "card": null,
-    "statement": "    Код на ревью: список покупок. Можно добавить позицию, отметить флажком и удалить. В коде **три ошибки** — две классические для React и одна про идентификаторы. Найди их глазами и проговори, потом исправь.\n\n    Как должно работать:\n\n    - добавленная позиция сразу появляется в списке, а счётчик под ним показывает новое число;\n    - флажок остаётся у той позиции, которую отметили, даже если удалить позицию выше;\n    - две позиции, добавленные подряд, удаляются по отдельности.\n\n\nХуки доступны без импорта, но `import { useState } from 'react'` тоже работает. JSX и TypeScript можно.",
+    "statement": "Код на ревью: список покупок. Можно добавить позицию, отметить флажком и удалить. В коде **три ошибки** — две классические для React и одна про идентификаторы. Найди их глазами и проговори, потом исправь.\n\nКак должно работать:\n\n- добавленная позиция сразу появляется в списке, а счётчик под ним показывает новое число;\n- флажок остаётся у той позиции, которую отметили, даже если удалить позицию выше;\n- две позиции, добавленные подряд, удаляются по отдельности.\n\n\nХуки доступны без импорта, но `import { useState } from 'react'` тоже работает. JSX и TypeScript можно.",
     "starter": "function ShoppingList({ initial }) {\n  const [items, setItems] = useState(initial)\n  const [text, setText] = useState('')\n\n  function add() {\n    items.push({ id: Date.now(), title: text })\n    setItems(items)\n    setText('')\n  }\n\n  function remove(id) {\n    setItems(items.filter((item) => item.id !== id))\n  }\n\n  return (\n    <div>\n      <input value={text} onChange={(e) => setText(e.target.value)} />\n      <button onClick={add}>Добавить</button>\n      <ul>\n        {items.map((item, index) => (\n          <Item key={index} item={item} onRemove={remove} />\n        ))}\n      </ul>\n      <Summary items={items} />\n    </div>\n  )\n}\n\nconst Summary = memo(function Summary({ items }) {\n  return <p>Позиций: {items.length}</p>\n})\n\nfunction Item({ item, onRemove }) {\n  const [done, setDone] = useState(false)\n  return (\n    <li>\n      <input type=\"checkbox\" checked={done} onChange={(e) => setDone(e.target.checked)} />\n      <span>{item.title}</span>\n      <button onClick={() => onRemove(item.id)}>Удалить</button>\n    </li>\n  )\n}\n",
     "tests": [
       {
@@ -1551,7 +1551,7 @@ export const CODE_TASKS: CodeTask[] = [
     "fn": "useForm",
     "title": "Composable формы с валидацией",
     "card": null,
-    "statement": "    Напиши composable `useForm(initial, rules)`.\n\n    - `values` — `reactive`-копия `initial`. Сам `initial` не меняется.\n    - `rules` — объект `{ поле: [правило, …] }`. Правило — функция `(value, values) => true | 'текст ошибки'`; второй аргумент нужен для правил вроде «пароли совпадают».\n    - `errors` — `computed`: объект `{ поле: 'текст первой ошибки' }` по всем полям из `rules`, для поля без ошибок — `''`.\n    - `isValid` — `computed`: `true`, если ошибок нет.\n    - `submit(handler)` — если форма валидна, вызывает `handler` с **обычным объектом** (копией значений, не прокси) и возвращает его результат. Если нет — `handler` не вызывает и возвращает `false`.\n\n\n`ref`, `reactive`, `computed`, `watch` и остальное доступны без импорта — как при автоимпортах в Nuxt.",
+    "statement": "Напиши composable `useForm(initial, rules)`.\n\n- `values` — `reactive`-копия `initial`. Сам `initial` не меняется.\n- `rules` — объект `{ поле: [правило, …] }`. Правило — функция `(value, values) => true | 'текст ошибки'`; второй аргумент нужен для правил вроде «пароли совпадают».\n- `errors` — `computed`: объект `{ поле: 'текст первой ошибки' }` по всем полям из `rules`, для поля без ошибок — `''`.\n- `isValid` — `computed`: `true`, если ошибок нет.\n- `submit(handler)` — если форма валидна, вызывает `handler` с **обычным объектом** (копией значений, не прокси) и возвращает его результат. Если нет — `handler` не вызывает и возвращает `false`.\n\n\n`ref`, `reactive`, `computed`, `watch` и остальное доступны без импорта — как при автоимпортах в Nuxt.",
     "starter": "function useForm(initial, rules) {\n  \n}\n",
     "tests": [
       {
@@ -1614,7 +1614,7 @@ export const CODE_TASKS: CodeTask[] = [
     "fn": "useStorage",
     "title": "ref, который живёт в localStorage",
     "card": null,
-    "statement": "    Напиши composable `useStorage(key, initial, storage)`: возвращает `ref`, синхронизированный с хранилищем.\n\n    - При создании читает `storage.getItem(key)`. Есть значение — `JSON.parse`, нет — `initial`.\n    - Битый JSON в хранилище не должен ронять код: тогда тоже `initial`.\n    - Любое изменение значения, **в том числе внутри объекта или массива**, записывается: `storage.setItem(key, JSON.stringify(value))`.\n    - `storage` передаётся аргументом. В тестах это подделка с `getItem` и `setItem`, в жизни — `localStorage`.\n\n\n`ref`, `reactive`, `computed`, `watch` и остальное доступны без импорта — как при автоимпортах в Nuxt.",
+    "statement": "Напиши composable `useStorage(key, initial, storage)`: возвращает `ref`, синхронизированный с хранилищем.\n\n- При создании читает `storage.getItem(key)`. Есть значение — `JSON.parse`, нет — `initial`.\n- Битый JSON в хранилище не должен ронять код: тогда тоже `initial`.\n- Любое изменение значения, **в том числе внутри объекта или массива**, записывается: `storage.setItem(key, JSON.stringify(value))`.\n- `storage` передаётся аргументом. В тестах это подделка с `getItem` и `setItem`, в жизни — `localStorage`.\n\n\n`ref`, `reactive`, `computed`, `watch` и остальное доступны без импорта — как при автоимпортах в Nuxt.",
     "starter": "function useStorage(key, initial, storage) {\n  \n}\n",
     "tests": [
       {
@@ -1652,7 +1652,7 @@ export const CODE_TASKS: CodeTask[] = [
     "fn": "useDebounced",
     "title": "Отложенный ref для поиска",
     "card": null,
-    "statement": "    Напиши composable `useDebounced(source, ms)`.\n\n    - `source` — ref, например текст в поле поиска.\n    - Вернуть новый ref. Сначала в нём то же значение, что в `source`.\n    - Когда `source` меняется, новый ref получает значение через `ms` миллисекунд после **последнего** изменения. Новое изменение раньше срока сдвигает отсчёт.\n\n    Применение: `watch(useDebounced(query, 300), load)` — запрос уходит, когда человек перестал печатать.\n\n\n`ref`, `reactive`, `computed`, `watch` и остальное доступны без импорта — как при автоимпортах в Nuxt.",
+    "statement": "Напиши composable `useDebounced(source, ms)`.\n\n- `source` — ref, например текст в поле поиска.\n- Вернуть новый ref. Сначала в нём то же значение, что в `source`.\n- Когда `source` меняется, новый ref получает значение через `ms` миллисекунд после **последнего** изменения. Новое изменение раньше срока сдвигает отсчёт.\n\nПрименение: `watch(useDebounced(query, 300), load)` — запрос уходит, когда человек перестал печатать.\n\n\n`ref`, `reactive`, `computed`, `watch` и остальное доступны без импорта — как при автоимпортах в Nuxt.",
     "starter": "function useDebounced(source, ms) {\n  \n}\n",
     "tests": [
       {
@@ -1688,7 +1688,7 @@ export const CODE_TASKS: CodeTask[] = [
     "fn": "usePagination",
     "title": "Composable пагинации",
     "card": null,
-    "statement": "    Напиши composable `usePagination(items, perPage)`.\n\n    - `items` — ref массива, `perPage` — сколько элементов на странице.\n    - Вернуть `{ page, pages, visible, next, prev }`:\n      - `page` — ref с номером текущей страницы, начинается с `1`;\n      - `pages` — computed, сколько всего страниц. Для пустого списка — `1`;\n      - `visible` — computed, элементы текущей страницы;\n      - `next()` и `prev()` листают, не выходя за границы.\n    - Список укоротился и текущей страницы больше нет — `page` становится последней существующей.\n\n\n`ref`, `reactive`, `computed`, `watch` и остальное доступны без импорта — как при автоимпортах в Nuxt.",
+    "statement": "Напиши composable `usePagination(items, perPage)`.\n\n- `items` — ref массива, `perPage` — сколько элементов на странице.\n- Вернуть `{ page, pages, visible, next, prev }`:\n  - `page` — ref с номером текущей страницы, начинается с `1`;\n  - `pages` — computed, сколько всего страниц. Для пустого списка — `1`;\n  - `visible` — computed, элементы текущей страницы;\n  - `next()` и `prev()` листают, не выходя за границы.\n- Список укоротился и текущей страницы больше нет — `page` становится последней существующей.\n\n\n`ref`, `reactive`, `computed`, `watch` и остальное доступны без импорта — как при автоимпортах в Nuxt.",
     "starter": "function usePagination(items, perPage) {\n  \n}\n",
     "tests": [
       {
@@ -1760,7 +1760,7 @@ export const CODE_TASKS: CodeTask[] = [
     "fn": "useSelection",
     "title": "Код-ревью: найди пять ошибок",
     "card": null,
-    "statement": "    Это код на ревью: composable выбора товаров в списке. В нём **пять ошибок**. Найди их сначала глазами и проговори каждую — так выглядит задание «проведи ревью» на интервью. Потом исправь и запусти тесты.\n\n    Как должно работать:\n\n    - `items` — ref массива товаров `{ id, title }`;\n    - `selected` — ref массива выбранных id; `count` — сколько выбрано; `allSelected` — выбраны ли все;\n    - `toggle(id)` выбирает товар или снимает выбор, `selectAll()` выбирает все;\n    - если `items` заменили новым массивом, из `selected` пропадают id, которых больше нет.\n\n\n`ref`, `reactive`, `computed`, `watch` и остальное доступны без импорта — как при автоимпортах в Nuxt.",
+    "statement": "Это код на ревью: composable выбора товаров в списке. В нём **пять ошибок**. Найди их сначала глазами и проговори каждую — так выглядит задание «проведи ревью» на интервью. Потом исправь и запусти тесты.\n\nКак должно работать:\n\n- `items` — ref массива товаров `{ id, title }`;\n- `selected` — ref массива выбранных id; `count` — сколько выбрано; `allSelected` — выбраны ли все;\n- `toggle(id)` выбирает товар или снимает выбор, `selectAll()` выбирает все;\n- если `items` заменили новым массивом, из `selected` пропадают id, которых больше нет.\n\n\n`ref`, `reactive`, `computed`, `watch` и остальное доступны без импорта — как при автоимпортах в Nuxt.",
     "starter": "function useSelection(items) {\n  const selected = ref([])\n\n  const count = computed(() => selected.length)\n  const allSelected = computed(() => count.value === items.length)\n\n  function toggle(id) {\n    const i = selected.value.indexOf(id)\n    if (i === -1) selected.value.push(id)\n    else selected.value.slice(i, 1)\n  }\n\n  function selectAll() {\n    selected = items.value.map((item) => item.id)\n  }\n\n  // Товары обновились — убираем из выбора то, чего больше нет\n  watch(items.value, (list) => {\n    selected.value = selected.value.filter((id) => list.some((item) => item.id === id))\n  })\n\n  return { selected, count, allSelected, toggle, selectAll }\n}\n",
     "tests": [
       {
@@ -1916,7 +1916,7 @@ export const CODE_TASKS: CodeTask[] = [
     "fn": "useFavoritesStore",
     "title": "Pinia: избранное на setup-сторе",
     "card": null,
-    "statement": "    Объяви стор избранного **в setup-синтаксисе**: `const useFavoritesStore = defineStore('favorites', () => { … })`.\n\n    - `ids` — массив id товаров в избранном;\n    - `count` — сколько товаров в избранном;\n    - `isFavorite(id)` — есть ли товар в избранном;\n    - `toggle(id)` — добавить, если нет, иначе убрать;\n    - `clear()` — очистить.\n\n    Вспомни, что из setup-функции нужно вернуть, чтобы оно попало в стор.\n\n\n`defineStore`, `storeToRefs`, `ref`, `computed` и подставные функции Nuxt (`$fetch`, `useRoute`, `useAsyncData`) доступны без импорта.",
+    "statement": "Объяви стор избранного **в setup-синтаксисе**: `const useFavoritesStore = defineStore('favorites', () => { … })`.\n\n- `ids` — массив id товаров в избранном;\n- `count` — сколько товаров в избранном;\n- `isFavorite(id)` — есть ли товар в избранном;\n- `toggle(id)` — добавить, если нет, иначе убрать;\n- `clear()` — очистить.\n\nВспомни, что из setup-функции нужно вернуть, чтобы оно попало в стор.\n\n\n`defineStore`, `storeToRefs`, `ref`, `computed` и подставные функции Nuxt (`$fetch`, `useRoute`, `useAsyncData`) доступны без импорта.",
     "starter": "const useFavoritesStore = defineStore('favorites', () => {\n  \n})\n",
     "tests": [
       {
@@ -1965,7 +1965,7 @@ export const CODE_TASKS: CodeTask[] = [
     "fn": "useCatalogStore",
     "title": "Pinia: каталог с подгрузкой",
     "card": null,
-    "statement": "    Объяви стор `useCatalogStore = defineStore('catalog', …)` для каталога с кнопкой «Показать ещё».\n\n    Состояние: `items` (массив), `page` (номер последней загруженной страницы, сначала `0`), `loading`, `error` (`null` или текст), `hasMore` (сначала `true`).\n\n    Действие `async loadMore()`:\n\n    - если загрузка уже идёт или `hasMore === false` — ничего не делает;\n    - иначе загружает `$fetch('/api/products', { query: { page: page + 1 } })`. Ответ — `{ items, hasMore }`;\n    - новые товары **дописываются** в конец, `page` увеличивается на 1;\n    - при ошибке: `error` — текст ошибки (`e.message`), `items` и `page` не меняются;\n    - перед загрузкой `error` очищается, после — `loading` сбрасывается в любом случае.\n\n\n`defineStore`, `storeToRefs`, `ref`, `computed` и подставные функции Nuxt (`$fetch`, `useRoute`, `useAsyncData`) доступны без импорта.",
+    "statement": "Объяви стор `useCatalogStore = defineStore('catalog', …)` для каталога с кнопкой «Показать ещё».\n\nСостояние: `items` (массив), `page` (номер последней загруженной страницы, сначала `0`), `loading`, `error` (`null` или текст), `hasMore` (сначала `true`).\n\nДействие `async loadMore()`:\n\n- если загрузка уже идёт или `hasMore === false` — ничего не делает;\n- иначе загружает `$fetch('/api/products', { query: { page: page + 1 } })`. Ответ — `{ items, hasMore }`;\n- новые товары **дописываются** в конец, `page` увеличивается на 1;\n- при ошибке: `error` — текст ошибки (`e.message`), `items` и `page` не меняются;\n- перед загрузкой `error` очищается, после — `loading` сбрасывается в любом случае.\n\n\n`defineStore`, `storeToRefs`, `ref`, `computed` и подставные функции Nuxt (`$fetch`, `useRoute`, `useAsyncData`) доступны без импорта.",
     "starter": "const useCatalogStore = defineStore('catalog', () => {\n  \n})\n",
     "tests": [
       {
@@ -2040,7 +2040,7 @@ export const CODE_TASKS: CodeTask[] = [
     "fn": "useCatalogPage",
     "title": "Nuxt: страница категории с ?page=",
     "card": null,
-    "statement": "    Страница `pages/catalog/[category].vue`, адрес вида `/catalog/phones?page=2`. Напиши её загрузку данных: `async function useCatalogPage()`.\n\n    - Категория — `useRoute().params.category`.\n    - Страница — `useRoute().query.page`. Это строка: преврати в целое число. Нет параметра, не число или меньше 1 — значит `1`.\n    - Данные — через `useAsyncData` с **ключом** `catalog-<категория>-<страница>` и загрузкой `$fetch('/api/catalog/<категория>', { query: { page } })`.\n    - Вернуть `{ page, data }`, где `page` — число, а `data` — из `useAsyncData`.\n\n    Подумай, почему ключ должен содержать и категорию, и страницу.\n\n\n`defineStore`, `storeToRefs`, `ref`, `computed` и подставные функции Nuxt (`$fetch`, `useRoute`, `useAsyncData`) доступны без импорта.",
+    "statement": "Страница `pages/catalog/[category].vue`, адрес вида `/catalog/phones?page=2`. Напиши её загрузку данных: `async function useCatalogPage()`.\n\n- Категория — `useRoute().params.category`.\n- Страница — `useRoute().query.page`. Это строка: преврати в целое число. Нет параметра, не число или меньше 1 — значит `1`.\n- Данные — через `useAsyncData` с **ключом** `catalog-<категория>-<страница>` и загрузкой `$fetch('/api/catalog/<категория>', { query: { page } })`.\n- Вернуть `{ page, data }`, где `page` — число, а `data` — из `useAsyncData`.\n\nПодумай, почему ключ должен содержать и категорию, и страницу.\n\n\n`defineStore`, `storeToRefs`, `ref`, `computed` и подставные функции Nuxt (`$fetch`, `useRoute`, `useAsyncData`) доступны без импорта.",
     "starter": "async function useCatalogPage() {\n  \n}\n",
     "tests": [
       {
@@ -2514,7 +2514,7 @@ export const CODE_TASKS: CodeTask[] = [
     "fn": "useProductFilter",
     "title": "Vue: фильтры каталога",
     "card": null,
-    "statement": "    Напиши composable `useProductFilter(products)` для списка товаров с фильтрами.\n\n    - `products` — ref массива `{ id, title, price, inStock }`.\n    - `filters` — `reactive({ query: '', maxPrice: null, onlyInStock: false })`.\n    - `sort` — ref: `'price-asc'`, `'price-desc'` или `''` (без сортировки).\n    - `result` — computed: товары, у которых `title` содержит `query` без учёта регистра и пробелов по краям, цена не больше `maxPrice` (если задан), есть в наличии (если `onlyInStock`). Отсортированы по `sort`. **Исходный массив не меняется.**\n    - `reset()` — возвращает фильтры и сортировку к начальным значениям.\n\n\n`ref`, `reactive`, `computed`, `watch` и остальное доступны без импорта — как при автоимпортах в Nuxt.",
+    "statement": "Напиши composable `useProductFilter(products)` для списка товаров с фильтрами.\n\n- `products` — ref массива `{ id, title, price, inStock }`.\n- `filters` — `reactive({ query: '', maxPrice: null, onlyInStock: false })`.\n- `sort` — ref: `'price-asc'`, `'price-desc'` или `''` (без сортировки).\n- `result` — computed: товары, у которых `title` содержит `query` без учёта регистра и пробелов по краям, цена не больше `maxPrice` (если задан), есть в наличии (если `onlyInStock`). Отсортированы по `sort`. **Исходный массив не меняется.**\n- `reset()` — возвращает фильтры и сортировку к начальным значениям.\n\n\n`ref`, `reactive`, `computed`, `watch` и остальное доступны без импорта — как при автоимпортах в Nuxt.",
     "starter": "function useProductFilter(products) {\n  \n}\n",
     "tests": [
       {

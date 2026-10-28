@@ -137,7 +137,7 @@ export function Review({ data }: { data: AppData }) {
   ) : queue.focused ? (
     <div className="scope-bar">
       <span>
-        Очередь по программе <b>{data.program?.company}</b>: темы вне списка отложены
+        В очереди только <b>{data.program?.listName}</b>: темы вне списка отложены
       </span>
       <button className="btn ghost sm" onClick={() => setFilter('scope', 'all')}>
         Показать все темы
