@@ -1,0 +1,42 @@
+{
+  "name": "interview-trainer",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -n server,web -c magenta,cyan \"npm:dev:server\" \"npm:dev:web\"",
+    "dev:server": "node --watch server/index.mjs",
+    "dev:web": "vite",
+    "build": "tsc -b && vite build",
+    "start": "cross-env NODE_ENV=production node server/index.mjs",
+    "make-app": "bash scripts/make-app.sh",
+    "preview": "vite preview",
+    "sync-notes": "bash scripts/sync-notes.sh",
+    "dev:alt": "cross-env API_PORT=5274 WEB_PORT=5273 DB_FILE=data/db.dev.json concurrently -n server,web -c yellow,green \"npm:dev:server\" \"npm:dev:web\"",
+    "dev:demo": "cross-env WEB_PORT=5373 vite --mode demo",
+    "build:demo": "tsc -b && vite build --mode demo && node scripts/check-demo.mjs",
+    "preview:demo": "vite preview --mode demo --port 5374 --strictPort"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "highlight.js": "^11.11.1",
+    "marked": "^15.0.7",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.1.5"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.2",
+    "cross-env": "^7.0.3",
+    "pinia": "^3.0.4",
+    "react-test-renderer": "^19.2.8",
+    "sucrase": "^3.35.1",
+    "typescript": "^5.7.3",
+    "vite": "^6.1.0",
+    "vue": "^3.5.43"
+  },
+  "license": "SEE LICENSE IN LICENSE"
+}

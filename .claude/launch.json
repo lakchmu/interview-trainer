@@ -1,0 +1,41 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "trainer",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
+      "port": 5173
+    },
+    {
+      "name": "trainer-alt",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev:alt"
+      ],
+      "port": 5273
+    },
+    {
+      "name": "trainer-demo",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev:demo"
+      ],
+      "port": 5373
+    },
+    {
+      "name": "trainer-demo-build",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "preview:demo"
+      ],
+      "port": 5374
+    }
+  ]
+}

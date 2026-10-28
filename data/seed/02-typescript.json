@@ -1,0 +1,181 @@
+{
+  "topic": "typescript",
+  "title": "TypeScript",
+  "cards": [
+    {
+      "id": "ts-001",
+      "q": "Чем `interface` отличается от `type`?",
+      "a": "**interface**: только для объектных форм, поддерживает declaration merging (два одноимённых объявления сливаются), лучше читается в ошибках, `extends` дешевле для компилятора.\n\n**type**: любые типы — объединения, пересечения, кортежи, примитивы, условные и mapped-типы; не мержится.\n\n```ts\ninterface User { id: number }\ninterface User { name: string } // ок: слились\n\ntype Status = 'on' | 'off';     // так interface не умеет\n```\n\nПрактика: публичные API и то, что клиенты могут расширять — `interface`; всё остальное и любые вычисления над типами — `type`.",
+      "tags": ["basics", "types"],
+      "level": "junior"
+    },
+    {
+      "id": "ts-002",
+      "q": "Что такое дженерики и зачем нужны ограничения (`extends`)?",
+      "a": "Дженерик — параметр типа, сохраняющий связь между входом и выходом.\n\n```ts\nfunction prop<T, K extends keyof T>(obj: T, key: K): T[K] {\n  return obj[key];\n}\nprop({ a: 1, b: 'x' }, 'b'); // выведется string\n```\n\nБез `K extends keyof T` нельзя гарантировать существование ключа и точный тип результата. Ограничения также дают автодополнение и превращают ошибку рантайма в ошибку компиляции. Значение по умолчанию: `<T = string>`.",
+      "tags": ["generics"],
+      "level": "junior"
+    },
+    {
+      "id": "ts-003",
+      "q": "Что такое условные типы и `infer`?",
+      "a": "```ts\ntype ElementOf<T> = T extends (infer U)[] ? U : never;\ntype R = ElementOf<string[]>;          // string\n\ntype Return<T> = T extends (...a: any) => infer R ? R : never;\ntype Awaited1<T> = T extends Promise<infer V> ? V : T;\n```\n\n`infer` объявляет переменную типа, которую компилятор выводит при сопоставлении. Условные типы над union **дистрибутивны**: `T extends X ? A : B` применяется к каждому члену объединения. Отключить дистрибутивность — обернуть в кортеж: `[T] extends [X] ? ...`.",
+      "tags": ["advanced-types", "generics"],
+      "level": "senior"
+    },
+    {
+      "id": "ts-004",
+      "q": "Как работают mapped-типы? Напиши свой `Partial` и `Readonly`.",
+      "a": "```ts\ntype MyPartial<T> = { [K in keyof T]?: T[K] };\ntype MyReadonly<T> = { readonly [K in keyof T]: T[K] };\ntype Mutable<T> = { -readonly [K in keyof T]-?: T[K] }; // снимаем модификаторы\n\n// переименование ключей (TS 4.1+)\ntype Getters<T> = {\n  [K in keyof T as `get${Capitalize<string & K>}`]: () => T[K];\n};\n```\n\n`-?` и `-readonly` убирают модификаторы, `as` — переименовывает или отфильтровывает ключи (вернув `never`).",
+      "tags": ["advanced-types"],
+      "level": "senior"
+    },
+    {
+      "id": "ts-005",
+      "q": "Перечисли утилитные типы, которые чаще всего нужны на практике.",
+      "a": "- `Partial<T>` / `Required<T>` / `Readonly<T>`\n- `Pick<T, K>` / `Omit<T, K>` — вырезать или исключить поля\n- `Record<K, V>` — словарь\n- `ReturnType<F>` / `Parameters<F>` / `Awaited<T>`\n- `Exclude<T, U>` / `Extract<T, U>` / `NonNullable<T>`\n- `InstanceType<C>`, `ConstructorParameters<C>`\n\nЛовушка `Omit`: он не дистрибутивен по union — для объединений пишут свой `DistributiveOmit`. И `Omit` не проверяет, что ключ реально существует.",
+      "tags": ["utility-types"],
+      "level": "middle"
+    },
+    {
+      "id": "ts-006",
+      "q": "Что такое discriminated union и почему это главный паттерн в TS?",
+      "a": "Объединение объектов с общим литеральным полем-дискриминантом — компилятор сужает тип по нему.\n\n```ts\ntype State =\n  | { status: 'idle' }\n  | { status: 'loading' }\n  | { status: 'success'; data: User[] }\n  | { status: 'error'; error: Error };\n\nfunction render(s: State) {\n  switch (s.status) {\n    case 'success': return s.data;   // data доступна только здесь\n    case 'error':   return s.error;\n  }\n}\n```\n\nДелает невозможные состояния непредставимыми (нет `loading: true` вместе с `data`). В связке с `never` даёт проверку исчерпывающести.",
+      "tags": ["unions", "patterns"],
+      "level": "middle"
+    },
+    {
+      "id": "ts-007",
+      "q": "Как сделать проверку исчерпывающести (exhaustiveness check)?",
+      "a": "```ts\nfunction assertNever(x: never): never {\n  throw new Error(`Необработанный вариант: ${JSON.stringify(x)}`);\n}\n\nswitch (action.type) {\n  case 'add': return add(action);\n  case 'remove': return remove(action);\n  default: return assertNever(action); // добавили новый тип — ошибка компиляции\n}\n```\n\nСмысл: при добавлении варианта в union компилятор сам покажет все места, которые надо дополнить. Альтернатива в конфиге — `switch` с включённым `noImplicitReturns`.",
+      "tags": ["unions", "patterns"],
+      "level": "middle"
+    },
+    {
+      "id": "ts-008",
+      "q": "Что такое type guards и type predicates?",
+      "a": "```ts\nfunction isUser(v: unknown): v is User {         // предикат\n  return typeof v === 'object' && v !== null && 'id' in v;\n}\n\nfunction assertIsUser(v: unknown): asserts v is User { ... } // assertion-функция\n```\n\nВстроенные сужения: `typeof`, `instanceof`, `in`, проверка на `null`, литеральное сравнение, `Array.isArray`. Предикат — обещание компилятору: если он врёт, безопасности типов больше нет, поэтому для внешних данных лучше рантайм-валидатор (zod/valibot) с выводом типа из схемы.",
+      "tags": ["narrowing", "types"],
+      "level": "middle"
+    },
+    {
+      "id": "ts-009",
+      "q": "`unknown` vs `any` vs `never` — в чём разница?",
+      "a": "- `any` — выключает проверку типов, «заразен», течёт по коду. Использовать почти никогда.\n- `unknown` — безопасный верхний тип: присвоить в него можно всё, но **использовать** нельзя без сужения. Правильный тип для `JSON.parse`, ответов API, `catch (e: unknown)`.\n- `never` — нижний тип, значений не существует: функция, которая всегда бросает или не завершается; невозможная ветка условного типа; сигнал недостижимости.\n\n`never` — подтип всего, поэтому присваивается куда угодно; в него не присваивается ничего.",
+      "tags": ["types", "basics"],
+      "level": "middle"
+    },
+    {
+      "id": "ts-010",
+      "q": "Что такое structural typing и чем оно отличается от номинального?",
+      "a": "TS сравнивает типы по **форме**, а не по имени: если у объекта есть все нужные поля подходящих типов — он совместим, даже если объявлен независимо.\n\n```ts\ntype Point = { x: number; y: number };\nconst p: Point = new Vector(1, 2); // ок, если поля совпали\n```\n\nПоследствие: `UserId` и `OrderId`, оба `string`, взаимозаменяемы. Лечится брендированием:\n\n```ts\ntype UserId = string & { readonly __brand: 'UserId' };\n```\n\nОтдельно есть excess property check: литерал объекта с лишним полем при прямом присваивании даёт ошибку, а та же переменная — нет.",
+      "tags": ["types", "basics"],
+      "level": "middle"
+    },
+    {
+      "id": "ts-011",
+      "q": "Что включает `strict` в tsconfig?",
+      "a": "- `strictNullChecks` — `null`/`undefined` не входят в другие типы (самый ценный флаг);\n- `noImplicitAny`;\n- `strictFunctionTypes` — контравариантность параметров;\n- `strictBindCallApply`;\n- `strictPropertyInitialization` — поля класса должны быть инициализированы;\n- `noImplicitThis`;\n- `useUnknownInCatchVariables` — `catch (e: unknown)`;\n- `alwaysStrict`.\n\nОтдельно стоит включать `noUncheckedIndexedAccess` (доступ по индексу даёт `T | undefined`) и `exactOptionalPropertyTypes`.",
+      "tags": ["config"],
+      "level": "middle"
+    },
+    {
+      "id": "ts-012",
+      "q": "Что такое ковариантность и контравариантность в TS?",
+      "a": "**Ковариантность** — если `Dog extends Animal`, то `Dog[]` совместим с `Animal[]` (по возвращаемым значениям).\n\n**Контравариантность** — параметры функций: функция, принимающая `Animal`, подходит там, где ждут функцию, принимающую `Dog` (при `strictFunctionTypes`).\n\n```ts\ntype Handler<T> = (v: T) => void;\nlet h: Handler<Dog> = (a: Animal) => {}; // ок — контравариантно\n```\n\nМетоды (`method(x: T): void`) проверяются бивариантно ради совместимости с DOM API — это осознанная дыра, поэтому колбэки лучше объявлять свойствами-стрелками.",
+      "tags": ["variance", "advanced-types"],
+      "level": "senior"
+    },
+    {
+      "id": "ts-013",
+      "q": "Как типизировать React-компонент с пропсами и ref?",
+      "a": "```ts\ntype ButtonProps = React.ComponentPropsWithoutRef<'button'> & {\n  variant?: 'primary' | 'ghost';\n};\n\nfunction Button({ variant = 'primary', ...rest }: ButtonProps) {\n  return <button data-variant={variant} {...rest} />;\n}\n```\n\nПолезно знать: `React.ComponentProps<typeof Component>` вытаскивает пропсы чужого компонента; `PropsWithChildren<P>`; в React 19 `ref` — обычный проп, `forwardRef` больше не нужен. `React.FC` не рекомендуют: он раньше неявно добавлял `children` и мешает дженерик-компонентам.",
+      "tags": ["react", "types"],
+      "level": "middle"
+    },
+    {
+      "id": "ts-014",
+      "q": "Что такое перегрузки функций и когда они лучше union-типа?",
+      "a": "```ts\nfunction parse(v: string): object;\nfunction parse(v: string, safe: true): object | null;\nfunction parse(v: string, safe?: boolean) { ... }  // реализация не видна снаружи\n```\n\nПерегрузки нужны, когда тип результата **зависит** от комбинации аргументов и union не выражает эту связь. Минусы: реализация типизируется вручную (компилятор её не проверяет строго), сложно поддерживать. Часто лучше решается дженериком или условным типом.",
+      "tags": ["functions"],
+      "level": "middle"
+    },
+    {
+      "id": "ts-015",
+      "q": "`enum` vs `const enum` vs union литералов — что выбрать?",
+      "a": "- Обычный `enum` компилируется в объект в рантайме (лишний код), числовой enum допускает присваивание любого числа — небезопасно.\n- `const enum` инлайнится, но ломается при `isolatedModules`/сборке через esbuild/SWC — не рекомендуется.\n- **Union литералов** (`type Status = 'idle' | 'done'`) — ноль рантайма, отличное сужение, простой JSON.\n- `as const`-объект + `typeof` — когда нужно и значение, и тип:\n\n```ts\nconst Status = { Idle: 'idle', Done: 'done' } as const;\ntype Status = typeof Status[keyof typeof Status];\n```\n\nВ TS 5.x появились ещё и стандартные `enum`-подобные конструкции, но дефолт сейчас — union литералов.",
+      "tags": ["basics", "patterns"],
+      "level": "middle"
+    },
+    {
+      "id": "ts-016",
+      "q": "Что делает `as const` и где это важно?",
+      "a": "Делает значение readonly и выводит **литеральные** типы вместо расширенных:\n\n```ts\nconst a = ['x', 'y'];           // string[]\nconst b = ['x', 'y'] as const;  // readonly ['x', 'y']\n\nconst cfg = { mode: 'dark' };            // { mode: string }\nconst cfg2 = { mode: 'dark' } as const;  // { readonly mode: 'dark' }\n```\n\nПрименение: конфиги, маршруты, ключи для `keyof typeof`, кортежи, аргументы, которые должны сузиться до литералов. Дженерик-аналог — `<const T>` (TS 5.0) в параметрах типа.",
+      "tags": ["basics", "types"],
+      "level": "middle"
+    },
+    {
+      "id": "ts-017",
+      "q": "Как типизировать данные, приходящие с бэкенда?",
+      "a": "Ответ API — это `unknown`, а не `User`. Аннотация типа ничего не проверяет в рантайме.\n\n```ts\nimport { z } from 'zod';\nconst User = z.object({ id: z.number(), name: z.string() });\ntype User = z.infer<typeof User>;\n\nconst user = User.parse(await res.json()); // упадёт здесь, а не через 10 экранов\n```\n\nАльтернативы: кодогенерация из OpenAPI/GraphQL-схемы (`openapi-typescript`, graphql-codegen) — единственный источник правды и типы бесплатно. Ключевая мысль для собеса: типы стираются при компиляции, границе системы нужна рантайм-валидация.",
+      "tags": ["patterns", "validation"],
+      "level": "middle"
+    },
+    {
+      "id": "ts-018",
+      "q": "Что такое declaration merging и module augmentation?",
+      "a": "Одноимённые `interface`/`namespace` сливаются. Это позволяет **дополнять чужие типы**:\n\n```ts\ndeclare module 'express' {\n  interface Request { user?: User }\n}\n\ndeclare global {\n  interface Window { __APP_VERSION__: string }\n}\n```\n\nЧастые случаи: расширение темы styled-components/MUI, `ImportMetaEnv` для Vite, добавление матчеров в `jest`/`vitest`. Файл с `declare global` должен быть модулем (иметь import/export) или лежать в `.d.ts`, попадающем в `include`.",
+      "tags": ["modules", "advanced-types"],
+      "level": "senior"
+    },
+    {
+      "id": "ts-019",
+      "q": "Template literal types — что это и зачем?",
+      "a": "```ts\ntype Event = 'click' | 'focus';\ntype Handler = `on${Capitalize<Event>}`;  // 'onClick' | 'onFocus'\n\ntype Path = `/users/${string}/posts`;\ntype CSSVar = `--${string}`;\n```\n\nПозволяет типизировать строковые ключи и пути: роутинг с параметрами, ключи переводов i18n, BEM-классы, события с префиксом. В связке с `infer` можно разбирать строку на части — например, вытащить `:id` из `/users/:id`.",
+      "tags": ["advanced-types"],
+      "level": "senior"
+    },
+    {
+      "id": "ts-020",
+      "q": "Как типизировать `Object.keys`, который возвращает `string[]`?",
+      "a": "Это осознанное решение TS: из-за структурной типизации у объекта могут быть **лишние** ключи в рантайме, поэтому сузить до `keyof T` небезопасно.\n\nВарианты:\n```ts\n// 1) локальный хелпер, когда вы контролируете объект\nconst keys = Object.keys(obj) as (keyof typeof obj)[];\n\n// 2) типобезопасная обёртка\nfunction objectKeys<T extends object>(o: T) {\n  return Object.keys(o) as (keyof T)[];\n}\n```\n\nПравильный ответ на собесе — объяснить **почему** так сделано, а не просто предложить `as`.",
+      "tags": ["types", "patterns"],
+      "level": "middle"
+    },
+    {
+      "id": "ts-021",
+      "q": "Что означает `satisfies` и чем отличается от аннотации типа?",
+      "a": "```ts\nconst routes = {\n  home: '/',\n  user: '/users/:id',\n} satisfies Record<string, `/${string}`>;\n\nroutes.home; // тип '/' — литерал сохранился\n```\n\nАннотация (`const routes: Record<...>`) проверяет соответствие, но **расширяет** тип до объявленного, теряя литералы. `satisfies` проверяет соответствие и оставляет выведенный узкий тип. Идеально для конфигов, палитр, карт обработчиков.",
+      "tags": ["basics", "types"],
+      "level": "middle"
+    },
+    {
+      "id": "ts-022",
+      "q": "Что такое `keyof`, `typeof` и индексные типы доступа?",
+      "a": "```ts\nconst config = { host: 'x', port: 80 };\ntype Config = typeof config;          // { host: string; port: number }\ntype Key = keyof Config;              // 'host' | 'port'\ntype Port = Config['port'];           // number\ntype Values = Config[keyof Config];   // string | number\n\ntype ItemType = (typeof list)[number]; // тип элемента массива\n```\n\n`typeof` в позиции типа берёт тип **значения** — мост из мира значений в мир типов.",
+      "tags": ["basics", "types"],
+      "level": "junior"
+    },
+    {
+      "id": "ts-023",
+      "q": "Как типизировать асинхронную функцию и результат с ошибкой?",
+      "a": "```ts\ntype Result<T, E = Error> =\n  | { ok: true; value: T }\n  | { ok: false; error: E };\n\nasync function load(id: string): Promise<Result<User>> {\n  try {\n    return { ok: true, value: await api.get(id) };\n  } catch (e) {\n    return { ok: false, error: e instanceof Error ? e : new Error(String(e)) };\n  }\n}\n```\n\nПочему так: TS не умеет типизировать `throw` (нет checked exceptions), поэтому явный Result-тип делает ошибки видимыми в сигнатуре и заставляет их обработать. `catch (e)` при `useUnknownInCatchVariables` даёт `unknown` — сузить обязательно.",
+      "tags": ["async", "patterns"],
+      "level": "middle"
+    },
+    {
+      "id": "ts-024",
+      "q": "Как работает вывод типов (inference) и когда его лучше не переопределять?",
+      "a": "TS выводит тип из инициализатора, из возвращаемого выражения, из контекста (contextual typing — например, тип параметра колбэка внутри `map`).\n\nПравило: **аннотируйте входы, доверяйте выводу для выходов** — параметры функций и публичные границы модуля типизируем явно, локальные переменные и возвращаемые значения обычно нет.\n\nИсключения, когда возвращаемый тип стоит написать: публичный API библиотеки (стабильность контракта), рекурсивные функции, необходимость поймать ошибку в самой функции, а не у её пользователя.",
+      "tags": ["basics", "types"],
+      "level": "middle"
+    },
+    {
+      "id": "ts-025",
+      "q": "Что такое декораторы в TS и в каком они состоянии?",
+      "a": "Декоратор — функция, оборачивающая класс, метод, поле или аксессор.\n\nС TS 5.0 поддержан **стандартный** (Stage 3) вариант — без `experimentalDecorators`, с новой сигнатурой `(value, context)`. Старый legacy-вариант (с `emitDecoratorMetadata`) до сих пор нужен Angular, NestJS, TypeORM, MobX-старым версиям.\n\n```ts\nfunction log<T extends (...a: any[]) => any>(fn: T, ctx: ClassMethodDecoratorContext) {\n  return function (this: any, ...args: any[]) {\n    console.time(String(ctx.name));\n    try { return fn.apply(this, args); } finally { console.timeEnd(String(ctx.name)); }\n  } as T;\n}\n```\n\nВажно: два вида несовместимы, смешивать в одном проекте нельзя.",
+      "tags": ["decorators"],
+      "level": "senior"
+    }
+  ]
+}

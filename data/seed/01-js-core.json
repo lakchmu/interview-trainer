@@ -1,0 +1,356 @@
+{
+  "topic": "js-core",
+  "title": "JS core",
+  "cards": [
+    {
+      "id": "js-001",
+      "q": "Что такое замыкание и когда оно создаётся?",
+      "a": "Замыкание — функция вместе со ссылкой на лексическое окружение, в котором она была **создана**. Создаётся в момент создания функции, а не вызова.\n\n```js\nfunction counter() {\n  let n = 0;             // живёт в [[Environment]] вложенной функции\n  return () => ++n;\n}\nconst inc = counter();\ninc(); // 1\ninc(); // 2\n```\n\nПрактика: приватное состояние, каррирование, `once`/`debounce`, мемоизация. Риск — утечки: замыкание держит весь scope, а не только использованную переменную (движки частично оптимизируют, но на DOM-узлах ловится реально).",
+      "tags": ["closures", "scope"],
+      "level": "junior"
+    },
+    {
+      "id": "js-002",
+      "q": "Классический вопрос: почему `for (var i...)` с setTimeout печатает одинаковые числа, а `let` — разные?",
+      "a": "`var` имеет функциональную область видимости — переменная одна на весь цикл, и к моменту срабатывания таймеров она уже равна конечному значению.\n\n```js\nfor (var i = 0; i < 3; i++) setTimeout(() => console.log(i)); // 3 3 3\nfor (let i = 0; i < 3; i++) setTimeout(() => console.log(i)); // 0 1 2\n```\n\n`let` в `for` создаёт **новую привязку на каждой итерации** (спека явно копирует значение между итерациями — `CreatePerIterationEnvironment`), поэтому каждый колбэк замыкается на своей копии. До ES6 то же делали через IIFE.",
+      "tags": ["closures", "var-let", "event-loop"],
+      "level": "junior"
+    },
+    {
+      "id": "js-003",
+      "q": "Как работает прототипное наследование? Чем `__proto__` отличается от `prototype`?",
+      "a": "У каждого объекта есть внутренняя ссылка `[[Prototype]]` (доступна как `Object.getPrototypeOf` / `__proto__`). При чтении свойства движок идёт по цепочке прототипов вверх до `null`.\n\n`prototype` — свойство **функций-конструкторов**: объект, который станет `[[Prototype]]` у созданных через `new` экземпляров.\n\n```js\nfunction A() {}\nconst a = new A();\nObject.getPrototypeOf(a) === A.prototype; // true\na.__proto__.__proto__ === Object.prototype; // true\n```\n\nЗапись свойства всегда идёт в сам объект (кроме сеттеров в прототипе) — это ассиметрия чтения/записи.",
+      "tags": ["prototypes", "oop"],
+      "level": "middle"
+    },
+    {
+      "id": "js-004",
+      "q": "Что делает оператор `new`?",
+      "a": "1. Создаёт пустой объект.\n2. Ставит ему `[[Prototype]] = Fn.prototype`.\n3. Вызывает функцию с `this` = новый объект.\n4. Возвращает `this`, **если** функция не вернула свой объект (примитив игнорируется).\n\n```js\nfunction myNew(Fn, ...args) {\n  const obj = Object.create(Fn.prototype);\n  const res = Fn.apply(obj, args);\n  return typeof res === 'object' && res !== null ? res : obj;\n}\n```",
+      "tags": ["prototypes", "this"],
+      "level": "middle"
+    },
+    {
+      "id": "js-005",
+      "q": "Правила определения `this` — перечисли по приоритету.",
+      "a": "Сверху вниз:\n1. **Стрелочная функция** — `this` берётся лексически, из места определения; `call/bind` его не меняют.\n2. **`new`** — `this` = новый объект.\n3. **`call` / `apply` / `bind`** — явное указание.\n4. **Вызов как метод** `obj.fn()` — `this = obj`.\n5. **Свободный вызов** — `undefined` в strict mode / `globalThis` в sloppy.\n\nЛовушка: `const f = obj.method; f()` теряет контекст. В классах поля-стрелки (`handle = () => {}`) — стандартный способ привязки для обработчиков.",
+      "tags": ["this", "context"],
+      "level": "junior"
+    },
+    {
+      "id": "js-006",
+      "q": "Опиши event loop: макро- и микрозадачи.",
+      "a": "Один тик:\n1. Взять **одну** макрозадачу (script, `setTimeout`, `setInterval`, I/O, события) и выполнить.\n2. Полностью опустошить очередь **микрозадач** (промисы, `queueMicrotask`, `MutationObserver`) — включая те, что добавились по ходу.\n3. При необходимости — рендер (`requestAnimationFrame` → стили → layout → paint).\n\n```js\nconsole.log('1');\nsetTimeout(() => console.log('2'));\nPromise.resolve().then(() => console.log('3'));\nconsole.log('4');\n// 1 4 3 2\n```\n\nБесконечная генерация микрозадач подвешивает рендер — макрозадача не получит шанс.",
+      "tags": ["event-loop", "async"],
+      "level": "middle"
+    },
+    {
+      "id": "js-007",
+      "q": "Куда попадает `requestAnimationFrame` относительно микрозадач и `setTimeout`?",
+      "a": "`rAF` — не макро- и не микрозадача, это отдельный колбэк шага рендеринга. Порядок в кадре: макрозадача → микрозадачи → (если пора рисовать) `rAF`-колбэки → пересчёт стилей/layout → paint.\n\nПоэтому:\n- анимации и любые чтения/записи layout лучше делать в `rAF`;\n- `setTimeout(fn, 0)` может выполниться и до, и после кадра — гарантий нет;\n- микрозадача, поставленная внутри `rAF`, выполнится **до** отрисовки.",
+      "tags": ["event-loop", "rendering"],
+      "level": "middle"
+    },
+    {
+      "id": "js-008",
+      "q": "В каких состояниях бывает промис и что важно про их смену?",
+      "a": "`pending` → `fulfilled` (value) или `rejected` (reason). Переход **однократный и необратимый** — это settled.\n\nВажно:\n- `.then` всегда возвращает **новый** промис;\n- колбэк выполняется как микрозадача, даже если промис уже resolved;\n- возврат промиса из `.then` разворачивается (стоит дополнительный тик);\n- `throw` внутри `.then` → отклонение следующего промиса.",
+      "tags": ["promises", "async"],
+      "level": "junior"
+    },
+    {
+      "id": "js-009",
+      "q": "Разница между `Promise.all`, `allSettled`, `race`, `any`.",
+      "a": "| Метод | Резолвится | Реджектится |\n|---|---|---|\n| `all` | все выполнены → массив значений | первый reject (fail-fast) |\n| `allSettled` | всегда → `{status, value/reason}[]` | никогда |\n| `race` | первый **settled** (любой исход) | если первый — reject |\n| `any` | первый fulfilled | все отклонены → `AggregateError` |\n\nВажно: `all` не отменяет остальные запросы — они продолжают выполняться. Для реальной отмены нужен `AbortController`.",
+      "tags": ["promises", "async"],
+      "level": "junior"
+    },
+    {
+      "id": "js-010",
+      "q": "Как ограничить параллельность промисов (пул на N одновременных задач)?",
+      "a": "```js\nasync function pool(tasks, limit = 5) {\n  const results = new Array(tasks.length);\n  let cursor = 0;\n  const workers = Array.from({ length: Math.min(limit, tasks.length) }, async () => {\n    while (cursor < tasks.length) {\n      const i = cursor++;            // синхронный захват индекса — гонки нет\n      results[i] = await tasks[i]();\n    }\n  });\n  await Promise.all(workers);\n  return results;\n}\n```\n\nКлюч к ответу: `tasks` — массив **функций**, а не промисов (промис стартует сразу при создании). Инкремент `cursor` синхронный, поэтому два воркера не возьмут одну задачу.",
+      "tags": ["promises", "async", "coding"],
+      "level": "senior"
+    },
+    {
+      "id": "js-011",
+      "q": "Чем `async/await` отличается от цепочек `.then` на уровне выполнения?",
+      "a": "`await` приостанавливает функцию и планирует продолжение как микрозадачу — семантически эквивалентно `.then`, но:\n- код читается линейно, работает `try/catch`, стек-трейсы информативнее;\n- **последовательный** `await` в цикле сериализует запросы — для параллельности запускаем сначала, ждём потом:\n\n```js\n// плохо: последовательно\nfor (const url of urls) data.push(await fetch(url));\n// хорошо: параллельно\nconst data = await Promise.all(urls.map((u) => fetch(u)));\n```\n\n`return await x` в `try` нужен, чтобы `catch` поймал ошибку; вне `try` — лишний тик.",
+      "tags": ["async", "promises"],
+      "level": "middle"
+    },
+    {
+      "id": "js-012",
+      "q": "Что выведет и почему?\n```js\nasync function f() { console.log(1); await null; console.log(2); }\nf();\nconsole.log(3);\nPromise.resolve().then(() => console.log(4));\n```",
+      "a": "`1 3 2 4`.\n\nТело async-функции выполняется **синхронно** до первого `await` → `1`. `await null` планирует продолжение микрозадачей. Синхронный код продолжается → `3`. Затем очередь микрозадач: продолжение `f` было поставлено раньше `.then` → `2`, потом `4`.",
+      "tags": ["async", "event-loop", "puzzle"],
+      "level": "middle"
+    },
+    {
+      "id": "js-013",
+      "q": "`==` vs `===`: какие правила приведения стоит помнить?",
+      "a": "`===` — без приведения (кроме `NaN !== NaN` и `+0 === -0`).\n\n`==` приводит по алгоритму:\n- `null == undefined` → `true`, и ни с чем больше не равны;\n- число vs строка → строка в число;\n- boolean → число (`true` → 1);\n- объект vs примитив → `ToPrimitive` (`valueOf`, потом `toString`).\n\nКлассика: `[] == false` → `true`, `'0' == false` → `true`, `null == 0` → `false`. Практика: всегда `===`, кроме идиомы `x == null` (проверка на null и undefined разом).",
+      "tags": ["types", "coercion"],
+      "level": "junior"
+    },
+    {
+      "id": "js-014",
+      "q": "Как надёжно определить тип значения в JS?",
+      "a": "`typeof` подходит для примитивов, но `typeof null === 'object'` (историческая ошибка) и все объекты — `'object'`.\n\n```js\nconst kind = (v) => Object.prototype.toString.call(v).slice(8, -1);\nkind([]);        // 'Array'\nkind(null);      // 'Null'\nkind(new Date()); // 'Date'\n```\n\nЕщё: `Array.isArray`, `Number.isNaN` (в отличие от глобального `isNaN` не приводит), `instanceof` (ломается через iframe/realm), `#brand in obj` для классов с приватными полями.",
+      "tags": ["types"],
+      "level": "junior"
+    },
+    {
+      "id": "js-015",
+      "q": "Глубокая копия объекта: какие есть способы и их ограничения?",
+      "a": "- `{...obj}` / `Object.assign` — **поверхностно**.\n- `JSON.parse(JSON.stringify(x))` — теряет `undefined`, функции, `Symbol`, `Date` → строка, падает на циклах, ломает `Map/Set`.\n- **`structuredClone(x)`** — нативно, поддерживает циклы, `Date`, `Map`, `Set`, `ArrayBuffer`; не копирует функции и прототипы классов.\n- Своя рекурсия с `WeakMap` для циклов — когда нужен полный контроль.\n\n```js\nfunction deepClone(v, seen = new WeakMap()) {\n  if (v === null || typeof v !== 'object') return v;\n  if (seen.has(v)) return seen.get(v);\n  const copy = Array.isArray(v) ? [] : Object.create(Object.getPrototypeOf(v));\n  seen.set(v, copy);\n  for (const k of Reflect.ownKeys(v)) copy[k] = deepClone(v[k], seen);\n  return copy;\n}\n```",
+      "tags": ["objects", "coding"],
+      "level": "middle"
+    },
+    {
+      "id": "js-016",
+      "q": "Когда использовать `Map` вместо обычного объекта? А `WeakMap`?",
+      "a": "`Map`: ключи любого типа (включая объекты), гарантированный порядок вставки, честный `.size`, быстрее на частых добавлениях/удалениях, нет коллизий с `Object.prototype`.\n\nОбъект: литеральный синтаксис, JSON, структурные данные с известными полями.\n\n`WeakMap`/`WeakSet`: ключи-объекты держатся **слабо** — если на объект не осталось других ссылок, пара удаляется сборщиком. Применение: кэш метаданных к DOM-узлам/экземплярам, приватные данные, мемоизация по объекту. Неитерируемы (иначе GC был бы наблюдаемым).",
+      "tags": ["collections", "memory"],
+      "level": "middle"
+    },
+    {
+      "id": "js-017",
+      "q": "Напиши `debounce` с отменой и немедленным вызовом.",
+      "a": "```js\nfunction debounce(fn, wait = 300, { leading = false } = {}) {\n  let timer = null;\n  const debounced = (...args) => {\n    const callNow = leading && timer === null;\n    clearTimeout(timer);\n    timer = setTimeout(() => {\n      timer = null;\n      if (!leading) fn(...args);\n    }, wait);\n    if (callNow) fn(...args);\n  };\n  debounced.cancel = () => { clearTimeout(timer); timer = null; };\n  return debounced;\n}\n```\n\nОтличие от `throttle`: debounce ждёт **паузу** в событиях (поиск, ресайз-финал), throttle гарантирует вызов **не чаще** раза в интервал (скролл, mousemove).",
+      "tags": ["coding", "functions"],
+      "level": "middle"
+    },
+    {
+      "id": "js-018",
+      "q": "Напиши `throttle` (leading + trailing).",
+      "a": "```js\nfunction throttle(fn, wait = 200) {\n  let last = 0, timer = null, lastArgs = null;\n  return (...args) => {\n    const now = Date.now();\n    const remaining = wait - (now - last);\n    lastArgs = args;\n    if (remaining <= 0) {\n      clearTimeout(timer); timer = null;\n      last = now;\n      fn(...args);\n    } else if (timer === null) {\n      timer = setTimeout(() => {\n        last = Date.now(); timer = null;\n        fn(...lastArgs);\n      }, remaining);\n    }\n  };\n}\n```",
+      "tags": ["coding", "functions"],
+      "level": "middle"
+    },
+    {
+      "id": "js-019",
+      "q": "Реализуй каррирование произвольной функции.",
+      "a": "```js\nfunction curry(fn) {\n  return function curried(...args) {\n    return args.length >= fn.length\n      ? fn.apply(this, args)\n      : (...rest) => curried.apply(this, [...args, ...rest]);\n  };\n}\n\nconst sum = curry((a, b, c) => a + b + c);\nsum(1)(2)(3); // 6\nsum(1, 2)(3); // 6\n```\n\nОпора на `fn.length` — арность. Не работает с rest-параметрами и значениями по умолчанию (они не считаются в `length`).",
+      "tags": ["coding", "functions"],
+      "level": "middle"
+    },
+    {
+      "id": "js-020",
+      "q": "Реализуй `Promise.all` вручную.",
+      "a": "```js\nfunction all(iterable) {\n  return new Promise((resolve, reject) => {\n    const items = [...iterable];\n    const results = new Array(items.length);\n    let pending = items.length;\n    if (pending === 0) return resolve([]);\n    items.forEach((item, i) => {\n      Promise.resolve(item).then((value) => {\n        results[i] = value;\n        if (--pending === 0) resolve(results);\n      }, reject);\n    });\n  });\n}\n```\n\nЧто проверяют: пустой массив, сохранение порядка, обёртка не-промисов через `Promise.resolve`, счётчик вместо `results.length`.",
+      "tags": ["coding", "promises"],
+      "level": "middle"
+    },
+    {
+      "id": "js-021",
+      "q": "Что такое генераторы и где они реально нужны?",
+      "a": "Функция `function*` возвращает итератор; `yield` приостанавливает выполнение с сохранением состояния, `it.next(v)` возобновляет и передаёт значение обратно внутрь.\n\n```js\nfunction* ids() { let i = 0; while (true) yield i++; }\n```\n\nПрименение: ленивые/бесконечные последовательности, обход деревьев без рекурсивного накопления, конечные автоматы, кооперативная многозадачность (redux-saga), собственный `async/await` (co). `yield*` делегирует другому итератору.",
+      "tags": ["generators", "iterators"],
+      "level": "middle"
+    },
+    {
+      "id": "js-022",
+      "q": "Как сделать объект итерируемым?",
+      "a": "Реализовать `[Symbol.iterator]()`, возвращающий объект с `next() → {value, done}`.\n\n```js\nconst range = {\n  from: 1, to: 5,\n  *[Symbol.iterator]() {\n    for (let i = this.from; i <= this.to; i++) yield i;\n  },\n};\n[...range]; // [1,2,3,4,5]\n```\n\nИтерируемое работает в `for..of`, спреде, деструктуризации, `Array.from`, `Promise.all`. Асинхронный аналог — `[Symbol.asyncIterator]` + `for await..of`.",
+      "tags": ["iterators", "generators"],
+      "level": "middle"
+    },
+    {
+      "id": "js-023",
+      "q": "Что такое Proxy и Reflect? Приведи практический пример.",
+      "a": "`Proxy` перехватывает базовые операции над объектом через ловушки (`get`, `set`, `has`, `deleteProperty`, `apply`…). `Reflect` — набор функций с той же семантикой, что и внутренние методы; используется внутри ловушек для поведения по умолчанию.\n\n```js\nconst withDefault = (obj, fallback) => new Proxy(obj, {\n  get: (t, k, r) => (k in t ? Reflect.get(t, k, r) : fallback),\n});\n```\n\nРеально применяется в реактивности (Vue 3, MobX 6, Valtio), валидации, логировании, ленивой загрузке. Минусы: заметный оверхед, ловушки не перехватывают приватные поля `#x`.",
+      "tags": ["proxy", "metaprogramming"],
+      "level": "senior"
+    },
+    {
+      "id": "js-024",
+      "q": "Как модули ES отличаются от CommonJS?",
+      "a": "| | ESM | CJS |\n|---|---|---|\n| Синтаксис | `import/export` | `require/module.exports` |\n| Разбор | статический, до выполнения | динамический, в рантайме |\n| Загрузка | асинхронная | синхронная |\n| Привязки | **живые** ссылки | копия значения на момент require |\n| `this` верхнего уровня | `undefined` | `module.exports` |\n| Режим | всегда strict | по умолчанию sloppy |\n\nСтатичность ESM даёт tree-shaking. Циклические зависимости в ESM разрешимы через hoisting деклараций, в CJS дают частично заполненный объект. Динамический `import()` возвращает промис и работает в обоих.",
+      "tags": ["modules", "bundling"],
+      "level": "middle"
+    },
+    {
+      "id": "js-025",
+      "q": "Что такое hoisting и Temporal Dead Zone?",
+      "a": "Все объявления «поднимаются» в начало области видимости, но по-разному:\n- `var` — поднимается и инициализируется `undefined`;\n- `function` — поднимается целиком (можно вызвать выше объявления);\n- `let`/`const`/`class` — поднимаются, но остаются **неинициализированными**; обращение до строки объявления → `ReferenceError`. Промежуток называется **TDZ**.\n\n```js\nconsole.log(a); // undefined\nconsole.log(b); // ReferenceError\nvar a = 1; let b = 2;\n```",
+      "tags": ["scope", "var-let"],
+      "level": "junior"
+    },
+    {
+      "id": "js-026",
+      "q": "Как работает сборка мусора в JS и какие бывают утечки?",
+      "a": "Алгоритм — **mark & sweep**: от корней (глобальный объект, стек вызовов) обходятся достижимые объекты, недостижимые освобождаются. Подсчёт ссылок не используется (циклы бы текли). Поколенческий сбор: молодые объекты в young generation чистятся часто и дёшево.\n\nТипичные утечки во фронтенде:\n- незакрытые подписки/таймеры/`addEventListener` после размонтирования;\n- ссылки на удалённые DOM-узлы в замыканиях и массивах;\n- бесконечно растущие кэши (лечится `WeakMap` или LRU);\n- глобальные переменные, подписки на `window`/`store`.\n\nДиагностика: Chrome DevTools → Memory → heap snapshot и сравнение снапшотов, Performance → Memory.",
+      "tags": ["memory", "gc"],
+      "level": "senior"
+    },
+    {
+      "id": "js-027",
+      "q": "Что такое `Symbol` и зачем он нужен?",
+      "a": "Примитив с гарантированной уникальностью — идеален как ключ свойства, который не столкнётся с чужим и не попадёт в `for..in`/`Object.keys`/`JSON.stringify`.\n\nWell-known символы настраивают поведение объекта: `Symbol.iterator`, `Symbol.asyncIterator`, `Symbol.toPrimitive`, `Symbol.hasInstance`, `Symbol.toStringTag`.\n\n`Symbol.for('key')` — глобальный реестр, один и тот же символ на всё приложение (в отличие от `Symbol('key')`).",
+      "tags": ["symbols", "types"],
+      "level": "middle"
+    },
+    {
+      "id": "js-028",
+      "q": "Дескрипторы свойств: что настраивают `writable`, `enumerable`, `configurable`?",
+      "a": "```js\nObject.defineProperty(obj, 'id', {\n  value: 1, writable: false, enumerable: false, configurable: false,\n});\n```\n\n- `writable` — можно ли присвоить новое значение;\n- `enumerable` — попадает ли в `for..in`, `Object.keys`, спред, `JSON.stringify`;\n- `configurable` — можно ли удалить или переопределить дескриптор (необратимо при `false`).\n\nПри `defineProperty` все флаги по умолчанию `false`, при обычном присваивании — `true`. Аксессорный вариант вместо `value/writable` — `get`/`set`.",
+      "tags": ["objects"],
+      "level": "middle"
+    },
+    {
+      "id": "js-029",
+      "q": "Как отменить fetch-запрос?",
+      "a": "```js\nconst ctrl = new AbortController();\nconst timer = setTimeout(() => ctrl.abort(), 5000);\ntry {\n  const res = await fetch(url, { signal: ctrl.signal });\n} catch (e) {\n  if (e.name === 'AbortError') { /* отменено — это не ошибка сети */ }\n} finally { clearTimeout(timer); }\n```\n\nОдин `signal` можно передать нескольким запросам — `abort()` отменит все. Есть готовые `AbortSignal.timeout(ms)` и `AbortSignal.any([...])`. В React `signal` естественно связывается с функцией очистки `useEffect`.",
+      "tags": ["async", "fetch", "browser"],
+      "level": "middle"
+    },
+    {
+      "id": "js-030",
+      "q": "`Object.freeze` — что именно замораживает?",
+      "a": "Только верхний уровень: запрещает добавление, удаление и изменение собственных свойств, делает их `writable: false, configurable: false`. Вложенные объекты остаются изменяемыми — нужен рекурсивный обход (deep freeze).\n\nВ sloppy mode запись молча игнорируется, в strict — `TypeError`. Проверка — `Object.isFrozen`. Рядом: `Object.seal` (менять значения можно, добавлять/удалять — нет) и `preventExtensions`.",
+      "tags": ["objects", "immutability"],
+      "level": "junior"
+    },
+    {
+      "id": "js-031",
+      "q": "Как работает `Array.prototype.sort` и какие подводные камни?",
+      "a": "Без компаратора элементы приводятся к строкам: `[10, 9, 1].sort()` → `[1, 10, 9]`. Компаратор должен вернуть число: отрицательное/0/положительное.\n\nС ES2019 сортировка **стабильна** по спецификации. Сортирует **на месте** и возвращает тот же массив — для иммутабельности берём `toSorted()` (ES2023) или `[...arr].sort()`.\n\nЛовушка: компаратор `(a, b) => a.x - b.x` ломается на `undefined`/`NaN`, а `a > b ? 1 : -1` нестабилен при равенстве — возвращайте `0`.",
+      "tags": ["arrays"],
+      "level": "junior"
+    },
+    {
+      "id": "js-032",
+      "q": "Чем `for..in` отличается от `for..of` и `Object.keys`?",
+      "a": "- `for..in` — по **перечисляемым строковым ключам**, включая унаследованные из прототипа. На массивах даёт индексы-строки и нарушает ожидания. Практически всегда лучше заменить.\n- `for..of` — по **значениям итерируемого** (массивы, строки, Map/Set, NodeList), поддерживает `break` и `await`.\n- `Object.keys/values/entries` — собственные перечисляемые ключи, без прототипа.\n\nПорядок ключей объекта: целочисленные по возрастанию, затем строковые в порядке вставки, затем символы.",
+      "tags": ["arrays", "objects", "loops"],
+      "level": "junior"
+    },
+    {
+      "id": "js-033",
+      "q": "Что такое tagged template и где применяется?",
+      "a": "```js\nfunction html(strings, ...values) {\n  return strings.reduce((acc, s, i) => acc + s + (values[i] != null ? escape(values[i]) : ''), '');\n}\nhtml`<p>${userInput}</p>`;\n```\n\nФункция получает массив статических кусков (плюс `strings.raw` без обработки escape) и подставляемые значения — можно экранировать, локализовать, собирать SQL/GraphQL-запросы. На этом построены styled-components, `graphql-tag`, `sql` в драйверах БД.",
+      "tags": ["strings", "syntax"],
+      "level": "middle"
+    },
+    {
+      "id": "js-034",
+      "q": "Как обрабатывать ошибки в async-коде, чтобы ничего не терялось?",
+      "a": "- `try/catch` вокруг `await`; в `.then`-цепочках — второй аргумент или `.catch` в конце.\n- Необработанное отклонение промиса ловится глобально: `window.onunhandledrejection` (в Node — `process.on('unhandledRejection')`) — обязательно логировать.\n- Ошибка внутри `setTimeout`-колбэка **не** ловится внешним `try/catch` — другой стек.\n- Собственные классы ошибок + `cause` для сохранения первопричины:\n\n```js\nthrow new Error('Не удалось загрузить профиль', { cause: err });\n```\n- `finally` — для очистки (снять лоадер, отменить таймер).",
+      "tags": ["errors", "async"],
+      "level": "middle"
+    },
+    {
+      "id": "js-035",
+      "q": "Чем отличаются `null` и `undefined`?",
+      "a": "`undefined` — «значения нет» по умолчанию: необъявленное поле, параметр без аргумента, функция без `return`. `null` — **явно** заданное пустое значение, ставится разработчиком.\n\n`typeof undefined === 'undefined'`, `typeof null === 'object'`. `null == undefined` → true, `null === undefined` → false.\n\nВажно: значения по умолчанию в параметрах и деструктуризации срабатывают только на `undefined`, но не на `null`. `??` и `?.` реагируют на оба.",
+      "tags": ["types"],
+      "level": "junior"
+    },
+    {
+      "id": "js-036",
+      "q": "Чем `??` отличается от `||`, а `?.` от обычной проверки?",
+      "a": "`||` подставляет правую часть для любого **falsy** (`0`, `''`, `false`, `NaN`), `??` — только для `null`/`undefined`:\n\n```js\nconst limit = input || 10;  // 0 превратится в 10 — баг\nconst limit = input ?? 10;  // 0 останется 0\n```\n\n`?.` прерывает цепочку и возвращает `undefined`, если слева `null`/`undefined`; работает и для вызовов `fn?.()`, и для индексов `arr?.[i]`. Не заменяет обработку ошибок: скрытый `undefined` дальше по коду может быть хуже, чем явное падение.",
+      "tags": ["syntax", "operators"],
+      "level": "junior"
+    },
+    {
+      "id": "js-037",
+      "q": "Что такое мемоизация и как написать её универсально?",
+      "a": "```js\nfunction memoize(fn, keyFn = (...a) => JSON.stringify(a)) {\n  const cache = new Map();\n  return (...args) => {\n    const key = keyFn(...args);\n    if (!cache.has(key)) cache.set(key, fn(...args));\n    return cache.get(key);\n  };\n}\n```\n\nОбсудить на собеседовании: чистота функции (иначе кэш врёт), рост памяти (LRU-ограничение), ключ для объектов (`WeakMap` при одном аргументе-объекте), кэширование промисов (сохраняем промис — тогда параллельные вызовы дедуплицируются).",
+      "tags": ["coding", "performance"],
+      "level": "middle"
+    },
+    {
+      "id": "js-038",
+      "q": "Как сделать глубокое сравнение двух значений?",
+      "a": "```js\nfunction deepEqual(a, b) {\n  if (Object.is(a, b)) return true;\n  if (typeof a !== 'object' || typeof b !== 'object' || !a || !b) return false;\n  if (Object.getPrototypeOf(a) !== Object.getPrototypeOf(b)) return false;\n  const ka = Reflect.ownKeys(a), kb = Reflect.ownKeys(b);\n  if (ka.length !== kb.length) return false;\n  return ka.every((k) => Object.hasOwn(b, k) && deepEqual(a[k], b[k]));\n}\n```\n\nУпомянуть: `Object.is` корректно обрабатывает `NaN` и `-0`; для `Date`/`Map`/`Set`/`RegExp` нужны отдельные ветки; циклические ссылки — через `WeakMap` посещённых пар.",
+      "tags": ["coding", "objects"],
+      "level": "middle"
+    },
+    {
+      "id": "js-039",
+      "q": "Что такое event delegation и почему это важно?",
+      "a": "Вместо обработчика на каждом элементе вешаем один на общего предка и определяем цель через `event.target.closest('.item')`.\n\n```js\nlist.addEventListener('click', (e) => {\n  const item = e.target.closest('[data-id]');\n  if (item && list.contains(item)) remove(item.dataset.id);\n});\n```\n\nПлюсы: меньше слушателей (память и время навешивания), работает для динамически добавленных элементов, проще снимать. Работает благодаря фазе всплытия; события вроде `focus`/`blur` не всплывают — используем `focusin`/`focusout` или `capture: true`.",
+      "tags": ["dom", "events"],
+      "level": "junior"
+    },
+    {
+      "id": "js-040",
+      "q": "Фазы распространения события в DOM и что делают `stopPropagation` / `preventDefault`.",
+      "a": "Три фазы: **capturing** (сверху вниз) → **target** → **bubbling** (снизу вверх). Слушатель по умолчанию на всплытии; `addEventListener(type, fn, true)` или `{capture: true}` — на погружении.\n\n- `preventDefault()` — отменяет действие по умолчанию (переход по ссылке, отправка формы). Не работает у passive-слушателей.\n- `stopPropagation()` — прерывает дальнейшее распространение.\n- `stopImmediatePropagation()` — плюс не даёт сработать остальным обработчикам на **этом же** элементе.\n\n`{ once: true }` снимает слушатель после первого срабатывания, `{ passive: true }` обещает не вызывать `preventDefault` и ускоряет скролл.",
+      "tags": ["dom", "events"],
+      "level": "junior"
+    },
+    {
+      "id": "js-041",
+      "q": "Как работает `bind` и как реализовать его самому?",
+      "a": "```js\nFunction.prototype.myBind = function (ctx, ...bound) {\n  const fn = this;\n  function wrapper(...args) {\n    // при вызове через new контекст должен быть новым объектом\n    return fn.apply(this instanceof wrapper ? this : ctx, [...bound, ...args]);\n  }\n  wrapper.prototype = Object.create(fn.prototype || null);\n  return wrapper;\n};\n```\n\nЧто спрашивают дополнительно: частичное применение аргументов, невозможность «перепривязать» уже привязанную функцию, потеря `name`/`length` в наивной реализации.",
+      "tags": ["coding", "this", "functions"],
+      "level": "senior"
+    },
+    {
+      "id": "js-042",
+      "q": "Чем отличаются `localStorage`, `sessionStorage`, cookie и IndexedDB?",
+      "a": "| | Объём | Жизнь | Отправка на сервер | API |\n|---|---|---|---|---|\n| localStorage | ~5–10 МБ | до очистки | нет | синхронный |\n| sessionStorage | ~5 МБ | вкладка | нет | синхронный |\n| cookie | ~4 КБ | `Expires`/`Max-Age` | **да, с каждым запросом** | строка |\n| IndexedDB | сотни МБ | до очистки | нет | асинхронный, транзакции |\n\nlocalStorage синхронный — блокирует поток, не годится для больших объёмов. Токены безопаснее в `httpOnly`-cookie (недоступны JS → защита от XSS-кражи), но нужен `SameSite` против CSRF.",
+      "tags": ["browser", "storage"],
+      "level": "middle"
+    },
+    {
+      "id": "js-043",
+      "q": "Что такое чистая функция и почему это важно во фронтенде?",
+      "a": "Чистая функция: (1) результат зависит **только** от аргументов, (2) нет побочных эффектов (не мутирует входные данные, не пишет в DOM/сеть/глобальные переменные).\n\nПочему важно: предсказуемость и тестируемость без моков, безопасная мемоизация, корректность React (рендер должен быть чистым — иначе StrictMode и Concurrent Rendering ломают предположения), редьюсеры Redux, легко распараллеливать/переупорядочивать.",
+      "tags": ["fp", "architecture"],
+      "level": "junior"
+    },
+    {
+      "id": "js-044",
+      "q": "`flat`, `flatMap`, `reduce`: реализуй `flat` с произвольной глубиной.",
+      "a": "```js\nfunction flat(arr, depth = 1) {\n  return arr.reduce((acc, v) =>\n    Array.isArray(v) && depth > 0\n      ? acc.concat(flat(v, depth - 1))\n      : acc.concat(v), []);\n}\n```\n\nИтеративный вариант через стек — без риска переполнения на глубоких структурах:\n\n```js\nfunction flatAll(arr) {\n  const stack = [...arr], out = [];\n  while (stack.length) {\n    const v = stack.pop();\n    Array.isArray(v) ? stack.push(...v) : out.push(v);\n  }\n  return out.reverse();\n}\n```",
+      "tags": ["coding", "arrays"],
+      "level": "junior"
+    },
+    {
+      "id": "js-045",
+      "q": "Что такое immutability и как обновлять вложенные структуры без мутаций?",
+      "a": "Не меняем существующий объект, а создаём новый — тогда сравнение по ссылке (`Object.is`) достоверно говорит об изменении. На этом стоит `React.memo`, `useMemo`, селекторы Redux.\n\n```js\nconst next = {\n  ...state,\n  user: { ...state.user, address: { ...state.user.address, city } },\n};\n```\n\nМассивы: `map`/`filter`/`concat`/спред, а не `push`/`splice`/`sort`. С ES2023 — `toSorted`, `toReversed`, `toSpliced`, `with`. На глубоких структурах удобнее Immer (`produce`) — он делает structural sharing через Proxy.",
+      "tags": ["immutability", "state"],
+      "level": "middle"
+    },
+    {
+      "id": "js-046",
+      "q": "Как работает `Number` в JS и почему `0.1 + 0.2 !== 0.3`?",
+      "a": "Все числа — IEEE-754 double (64 бита). `0.1` и `0.2` не представимы точно в двоичной дроби, сумма даёт `0.30000000000000004`.\n\nРешения: сравнение с эпсилоном `Math.abs(a - b) < Number.EPSILON`, работа в минимальных единицах (копейки — целые), `toFixed` **только** для вывода, decimal-библиотеки для денег.\n\nБезопасные целые — до `Number.MAX_SAFE_INTEGER` (2^53−1); дальше `BigInt` (`10n`), который не смешивается с `Number` в арифметике.",
+      "tags": ["numbers", "types"],
+      "level": "middle"
+    },
+    {
+      "id": "js-047",
+      "q": "Web Workers: когда нужны и какие ограничения?",
+      "a": "Отдельный поток без доступа к DOM, общение через `postMessage` (структурное клонирование, либо zero-copy передача `Transferable`, либо `SharedArrayBuffer`).\n\nКогда: тяжёлые вычисления (парсинг больших JSON, обработка изображений, крипто, сортировка десятков тысяч строк) — чтобы не блокировать main thread и не ронять FPS.\n\nОграничения: нет DOM/`window`, старт стоит ~несколько мс и памяти, сериализация сообщений не бесплатна. Родственники: Service Worker (сетевой прокси, оффлайн), SharedWorker, Worklets.",
+      "tags": ["performance", "browser", "async"],
+      "level": "senior"
+    },
+    {
+      "id": "js-048",
+      "q": "Что такое strict mode и что он меняет?",
+      "a": "`'use strict'` (в модулях и классах — всегда включён):\n- присваивание необъявленной переменной → `ReferenceError` вместо создания глобальной;\n- `this` в свободном вызове — `undefined`, а не `globalThis`;\n- запрет дублей параметров, `with`, восьмеричных литералов `010`;\n- ошибки при записи в неизменяемое свойство и при `delete` неудаляемого;\n- `arguments` не синхронизируется с параметрами.",
+      "tags": ["syntax", "modules"],
+      "level": "junior"
+    },
+    {
+      "id": "js-049",
+      "q": "Как устроены классы в JS: приватные поля, статика, наследование?",
+      "a": "```js\nclass Base {\n  static registry = new Map();   // статическое поле\n  #secret = 42;                  // приватное, физически недоступно снаружи\n  get secret() { return this.#secret; }\n  static #count = 0;             // приватная статика\n}\nclass Child extends Base {\n  constructor() { super(); }     // super() обязателен до использования this\n}\n```\n\nКлассы — синтаксический сахар над прототипами, но с отличиями: тело всегда strict, методы неперечисляемы, вызов без `new` → `TypeError`, поля класса присваиваются экземпляру (а методы живут в прототипе). `#`-поля — настоящая приватность на уровне движка, недоступны даже через Proxy.",
+      "tags": ["oop", "classes"],
+      "level": "middle"
+    },
+    {
+      "id": "js-050",
+      "q": "Как реализовать паттерн pub/sub (EventEmitter)?",
+      "a": "```js\nclass Emitter {\n  #listeners = new Map();\n  on(event, fn) {\n    if (!this.#listeners.has(event)) this.#listeners.set(event, new Set());\n    this.#listeners.get(event).add(fn);\n    return () => this.off(event, fn);   // возвращаем отписку — так труднее забыть\n  }\n  off(event, fn) { this.#listeners.get(event)?.delete(fn); }\n  emit(event, ...args) {\n    // копия — чтобы отписка внутри обработчика не ломала обход\n    for (const fn of [...(this.#listeners.get(event) ?? [])]) fn(...args);\n  }\n}\n```\n\nОбсудить: `once`, изоляция ошибок в обработчиках (`try/catch` на каждый), утечки при отсутствии отписки.",
+      "tags": ["coding", "patterns"],
+      "level": "middle"
+    }
+  ]
+}

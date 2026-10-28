@@ -1,0 +1,48 @@
+# Демо-версия на GitHub Pages: сборка при каждом пуше в main.
+# Номер счётчика Метрики — переменная репозитория METRIKA_ID
+# (Settings → Secrets and variables → Actions → Variables). Без неё демо
+# собирается без аналитики.
+name: Деплой демо
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build:demo
+        env:
+          # Сайт живёт в подпапке: https://<логин>.github.io/<репозиторий>/
+          BASE: /${{ github.event.repository.name }}/
+          VITE_METRIKA_ID: ${{ vars.METRIKA_ID }}
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist-demo
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

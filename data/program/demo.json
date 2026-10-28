@@ -1,0 +1,523 @@
+{
+  "id": "demo",
+  "company": "фронтенд-собеседованиям",
+  "title": "Темы фронтенд-собеседований: React, Vue и общая база",
+  "nav": "План",
+  "brand": "React · Vue · общие темы",
+  "heading": "Подготовка к фронтенд-собеседованиям",
+  "listName": "программа",
+  "resourcesTitle": "Где читать дальше",
+  "resourcesNote": "Первоисточники по темам, для которых в приложении материала мало или нет.",
+  "source": {
+    "title": "типовой список тем из вакансий Senior Frontend (React, Vue)",
+    "checked": "2026-10-24"
+  },
+  "rule": "Во многих компаниях на лайвкодинге нельзя пользоваться ИИ и подсказками. Отвечать и писать код придётся из головы, поэтому ответ вслух и задача руками важнее перечитывания.",
+  "order": [
+    "react",
+    "common",
+    "vue",
+    "company"
+  ],
+  "blocks": [
+    {
+      "id": "react",
+      "title": "React",
+      "note": "Хуки и компоненты руками — в «Коде руками», наборы «React».",
+      "topics": [
+        {
+          "id": "react-internals",
+          "title": "Как React устроен внутри",
+          "detail": "Fiber, reconciliation, ключи, батчинг, когда и почему происходит повторный рендер",
+          "cards": [
+            {
+              "topic": "react",
+              "tags": [
+                "core",
+                "rendering",
+                "internals",
+                "concurrent",
+                "lists"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "react-lifecycle",
+          "title": "Жизненный цикл, useEffect и классовые компоненты",
+          "detail": "эффекты и их очистка, зависимости, классовый жизненный цикл для легаси",
+          "cards": [
+            {
+              "topic": "react",
+              "tags": [
+                "hooks",
+                "effects",
+                "refs",
+                "state"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "react-perf",
+          "title": "Оптимизация",
+          "detail": "memo, useMemo, useCallback, профилировщик, виртуализация длинных списков",
+          "cards": [
+            {
+              "topic": "react",
+              "tags": [
+                "performance"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "tanstack",
+          "title": "TanStack Query",
+          "detail": "ключи запросов, staleTime и gcTime, инвалидация, оптимистичные обновления, refetchInterval",
+          "cards": [
+            {
+              "topic": "react",
+              "tags": [
+                "data-fetching"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "react-testing",
+          "title": "Jest и React Testing Library",
+          "detail": "что и как тестировать, запросы по роли, асинхронные проверки",
+          "cards": [
+            {
+              "topic": "react",
+              "tags": [
+                "testing"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "a11y",
+          "title": "Доступность: WCAG и ARIA",
+          "detail": "семантика, клавиатура, роли и состояния, контраст",
+          "cards": [
+            {
+              "topic": "react",
+              "tags": [
+                "a11y"
+              ]
+            },
+            {
+              "topic": "web-platform",
+              "tags": [
+                "a11y"
+              ]
+            },
+            {
+              "topic": "markup",
+              "tags": [
+                "a11y",
+                "семантика"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "common",
+      "title": "Общее для всех",
+      "note": "Спросят в любой компании.",
+      "topics": [
+        {
+          "id": "js-core",
+          "title": "JavaScript: основы, которые спрашивают везде",
+          "detail": "event loop, микро- и макрозадачи, замыкания, this, промисы и async/await, каррирование",
+          "cards": [
+            {
+              "topic": "js-core",
+              "tags": [
+                "async",
+                "promises",
+                "event-loop",
+                "closures",
+                "scope",
+                "this",
+                "context",
+                "functions",
+                "errors"
+              ]
+            },
+            {
+              "topic": "js-extra",
+              "groups": [
+                2,
+                3
+              ]
+            }
+          ],
+          "notes": [
+            {
+              "file": 12,
+              "groups": [
+                1
+              ]
+            },
+            {
+              "file": 13,
+              "groups": [
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "id": "typescript",
+          "title": "TypeScript",
+          "detail": "дженерики, условные и утилитные типы, сужение типов, типизация ответов API",
+          "cards": [
+            {
+              "topic": "typescript"
+            }
+          ]
+        },
+        {
+          "id": "http",
+          "title": "HTTP и REST",
+          "detail": "методы, статус-коды, кеширование, CORS, обработка ошибок и повторные запросы",
+          "cards": [
+            {
+              "topic": "web-platform",
+              "tags": [
+                "network",
+                "http",
+                "api"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "architecture",
+          "title": "Архитектура фронтенда и FSD",
+          "detail": "структура модулей, слои FSD, границы компонентов",
+          "cards": [
+            {
+              "topic": "react",
+              "tags": [
+                "architecture",
+                "patterns"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "techdebt",
+          "title": "Работа с техдолгом",
+          "detail": "как находить, оценивать, договариваться о времени и разбирать по частям",
+          "cards": []
+        },
+        {
+          "id": "algorithms",
+          "title": "Алгоритмы и структуры данных",
+          "detail": "массивы, хеш-таблицы, два указателя, сложность в O-нотации",
+          "cards": [
+            {
+              "topic": "algorithms",
+              "tags": [
+                "complexity",
+                "arrays",
+                "hash-map",
+                "two-pointers",
+                "sliding-window",
+                "sorting",
+                "binary-search",
+                "strings",
+                "basics",
+                "leetcode",
+                "coding",
+                "patterns",
+                "recursion",
+                "data-structures"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vue",
+      "title": "Vue",
+      "note": "Для вакансий на Vue и смешанных стеков.",
+      "topics": [
+        {
+          "id": "vue-migration",
+          "title": "Переход с Vue 2 на Vue 3",
+          "detail": "Options API против Composition API, что сломается при переходе, режим совместимости",
+          "cards": [],
+          "notes": [
+            {
+              "file": 9,
+              "groups": [
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "id": "vue-core",
+          "title": "Реактивность, Pinia против Vuex, Vue Router",
+          "detail": "ref, reactive, computed, watch; сторы; маршрутизация",
+          "cards": [
+            {
+              "topic": "vue",
+              "tags": [
+                "vue",
+                "composition-api",
+                "pinia",
+                "реактивность",
+                "роутинг",
+                "компоненты",
+                "директивы",
+                "жизненный-цикл",
+                "формы"
+              ]
+            }
+          ],
+          "notes": [
+            {
+              "file": 9,
+              "groups": [
+                1,
+                2,
+                3,
+                4
+              ]
+            },
+            {
+              "file": 12,
+              "groups": [
+                3
+              ]
+            }
+          ],
+          "quiz": [
+            "vue"
+          ]
+        },
+        {
+          "id": "jquery",
+          "title": "Уход от jQuery",
+          "detail": "как постепенно переписывать легаси, не останавливая продукт",
+          "cards": []
+        }
+      ]
+    },
+    {
+      "id": "company",
+      "title": "Отдельные темы",
+      "note": "Встречаются не везде — учить под конкретную вакансию.",
+      "topics": [
+        {
+          "id": "microfrontends",
+          "title": "Микрофронтенды и Module Federation",
+          "detail": "хотя бы теория",
+          "cards": []
+        },
+        {
+          "id": "monitoring",
+          "title": "Sentry и мониторинг ошибок",
+          "detail": "отлов и разбор ошибок на проде",
+          "cards": []
+        },
+        {
+          "id": "gc",
+          "title": "Сборщик мусора V8",
+          "detail": "поколения, достижимость, утечки",
+          "cards": [
+            {
+              "topic": "js-core",
+              "tags": [
+                "memory",
+                "gc"
+              ]
+            }
+          ],
+          "notes": [
+            {
+              "file": 13,
+              "groups": [
+                2
+              ]
+            }
+          ]
+        },
+        {
+          "id": "websocket",
+          "title": "WebSocket и интерфейсы реального времени",
+          "detail": "переподключение, heartbeat, чаты и уведомления",
+          "cards": [
+            {
+              "topic": "web-platform",
+              "tags": [
+                "realtime"
+              ]
+            },
+            {
+              "topic": "algorithms",
+              "tags": [
+                "realtime"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "payments",
+          "title": "Платёжные формы и валидация",
+          "detail": "маски, проверка номера карты, ошибки, безопасность",
+          "cards": []
+        },
+        {
+          "id": "ux",
+          "title": "Принципы UX",
+          "detail": "базовые принципы и эвристики",
+          "cards": []
+        }
+      ]
+    }
+  ],
+  "adjacent": {
+    "id": "adjacent",
+    "title": "Рядом со списком",
+    "note": "Темы рядом со списком: встречаются на собеседованиях, но в готовность не входят.",
+    "topics": [
+      {
+        "id": "browser",
+        "title": "Как работает браузер",
+        "detail": "стадии рендеринга, reflow и repaint",
+        "cards": [
+          {
+            "topic": "web-platform",
+            "tags": [
+              "browser",
+              "performance"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "markup",
+        "title": "HTML и CSS",
+        "detail": "вёрстка, адаптив, анимации",
+        "cards": [
+          {
+            "topic": "markup"
+          },
+          {
+            "topic": "web-platform",
+            "tags": [
+              "css",
+              "layout",
+              "html",
+              "responsive"
+            ]
+          }
+        ],
+        "notes": [
+          {
+            "file": 10
+          }
+        ],
+        "quiz": [
+          "markup"
+        ]
+      },
+      {
+        "id": "process",
+        "title": "Git, сборка, процессы",
+        "detail": "git flow, ревью, CI/CD, сборщики",
+        "cards": [
+          {
+            "topic": "tools"
+          }
+        ],
+        "notes": [
+          {
+            "file": 11
+          }
+        ],
+        "quiz": [
+          "tools"
+        ]
+      },
+      {
+        "id": "nuxt",
+        "title": "Nuxt",
+        "detail": "структура проекта, маршрутизация, загрузка данных",
+        "cards": [
+          {
+            "topic": "vue",
+            "tags": [
+              "nuxt",
+              "ssr",
+              "данные"
+            ]
+          }
+        ],
+        "notes": [
+          {
+            "file": 9,
+            "groups": [
+              5,
+              6,
+              7
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "out": {
+    "title": "Вне списка",
+    "note": "Ничего не отложено: все колоды так или иначе пересекаются с требованиями.",
+    "decks": [],
+    "files": []
+  },
+  "resources": [
+    {
+      "title": "React — документация",
+      "kind": "сайт",
+      "url": "https://react.dev/learn"
+    },
+    {
+      "title": "TanStack Query — документация",
+      "kind": "сайт",
+      "url": "https://tanstack.com/query/latest/docs/framework/react/overview"
+    },
+    {
+      "title": "React Testing Library",
+      "kind": "сайт",
+      "url": "https://testing-library.com/docs/react-testing-library/intro/"
+    },
+    {
+      "title": "Руководство по переходу на Vue 3",
+      "kind": "сайт",
+      "url": "https://v3-migration.vuejs.org/"
+    },
+    {
+      "title": "WCAG — обзор стандарта",
+      "kind": "сайт",
+      "url": "https://www.w3.org/WAI/standards-guidelines/wcag/"
+    },
+    {
+      "title": "WebSocket на MDN",
+      "kind": "сайт",
+      "url": "https://developer.mozilla.org/ru/docs/Web/API/WebSocket"
+    },
+    {
+      "title": "Современный учебник JavaScript",
+      "kind": "сайт",
+      "url": "https://learn.javascript.ru/"
+    }
+  ]
+}

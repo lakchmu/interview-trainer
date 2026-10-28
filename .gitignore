@@ -1,0 +1,40 @@
+node_modules
+dist
+dist-demo
+*.tsbuildinfo
+.DS_Store
+*.log
+
+# сгенерированный лаунчер
+Interview Trainer.app/
+
+# Личный прогресс и его копии — только на этой машине
+data/db.json
+data/db.json.*
+data/db.dev.json*
+data/backups/
+
+# Приватный контент: конспекты 1–8 и всё, что из них сделано (материалы
+# работодателя, публикуются только с разрешения). Файлы остаются на диске,
+# локальное приложение работает с ними как раньше. Список продублирован
+# в shared/private-content.js — по нему демо-сборка отсекает то же самое.
+data/notes/[1-8].*
+data/seed/1[0-7]-kb-*.json
+data/quiz/0[1-8]-kb-*.json
+data/selfcheck/[1-8].json
+
+# Личные заметки: вопросы про опыт
+data/notes/14.*
+
+# Личные программы под конкретные вакансии
+data/program/frontend.json
+data/program/ozon.json
+
+# Локальные настройки Claude Code
+.claude/settings.local.json
+
+# Путь к папке с исходниками конспектов (для npm run sync-notes)
+.notes-src
+
+# Подробная инструкция к локальному приложению — упоминает приватные материалы
+README.local.md
