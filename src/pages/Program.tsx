@@ -32,14 +32,6 @@ function plural(n: number, one: string, few: string, many: string) {
 
 const readLink = (rel: string, group: number) => `/notes?file=${encodeURIComponent(rel)}&group=${group}`
 
-/** «2026-10-11» → «11 октября 2026». */
-function longDate(iso: string) {
-  const d = new Date(`${iso}T12:00:00`)
-  return Number.isNaN(d.getTime())
-    ? iso
-    : d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
-}
-
 /**
  * Куда ведёт кнопка шага. Обычно это решает сервер; шаги с задачами на код он
  * не знает (тренажёр живёт целиком в браузере), поэтому их связывает страница:
@@ -132,17 +124,6 @@ export function Program({ data }: { data: AppData }) {
   return (
     <div className="program">
       <h1>{program.heading}</h1>
-      <p className="subtitle">
-        {program.title} ·{' '}
-        {program.source.url ? (
-          <a href={program.source.url} target="_blank" rel="noreferrer">
-            {program.source.title}
-          </a>
-        ) : (
-          program.source.title
-        )}
-        , сверено {longDate(program.source.checked)}
-      </p>
 
       <section className="program-hero card-surface">
         <Ring value={program.readiness} />
