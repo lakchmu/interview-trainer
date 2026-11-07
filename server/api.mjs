@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import { getDb, persist, persistNow, newSrs } from './db.mjs'
 import { CATALOG, shopView, buyItem, equipItem, decorOf } from './shop.mjs'
 import { review as applyReview } from '../shared/srs.js'
+import { areaOf } from '../shared/topics.js'
 import { scanNotes, readNote, searchNotes, resolveDir, splitCards, writeCard, isBundled } from './notes.mjs'
 import { readQuizzes } from './quiz.mjs'
 import { award, levelOf, dailyProgress, checkAchievements, ACHIEVEMENTS } from './game.mjs'
@@ -98,11 +99,12 @@ app.get('/api/queue', (req, res) => {
     return scopeOf.get(c.id)
   }
 
+  const wantedAreas = topics.map((t) => areaOf(t).id)
   const pool = Object.values(db.cards).filter((c) => {
     if (c.suspended) return false
     if (only && !only.has(c.id)) return false
     if (focused && scope(c) === 'out') return false
-    if (topics.length && !topics.includes(c.topic)) return false
+    if (wantedAreas.length && !wantedAreas.includes(areaOf(c.topic).id)) return false
     if (sources.length && !sources.includes(c.source)) return false
     if (tags.length && !tags.some((t) => c.tags.includes(t))) return false
     return true
@@ -898,24 +900,14 @@ app.get('/api/game', (_req, res) => {
   // прогресс по темам — высота каждой вершины на карте
   const topics = new Map()
   for (const card of Object.values(db.cards)) {
-    if (!topics.has(card.topic)) {
-      topics.set(card.topic, {
-        topic: card.topic,
-        title: card.topicTitle,
-        kb: card.topic.startsWith('kb-'), // тема из собственных конспектов
-        total: 0, seen: 0, mastered: 0,
-      })
+    const area = areaOf(card.topic, card.topicTitle)
+    if (!topics.has(area.id)) {
+      topics.set(area.id, { topic: area.id, title: area.title, total: 0, seen: 0, mastered: 0 })
     }
-    const t = topics.get(card.topic)
+    const t = topics.get(area.id)
     t.total += 1
     if (card.srs.state !== 'new') t.seen += 1
     if (card.srs.interval >= 21) t.mastered += 1
-  }
-
-  const bestQuiz = {}
-  for (const a of db.quizAttempts) {
-    const percent = Math.round((a.correct / a.total) * 100)
-    if (!(a.topic in bestQuiz) || percent > bestQuiz[a.topic]) bestQuiz[a.topic] = percent
   }
 
   const coverage = readingCoverage(db)
@@ -930,7 +922,7 @@ app.get('/api/game', (_req, res) => {
       charsTotal: coverage.reduce((s, f) => s + f.charsTotal, 0),
       files: coverage,
     },
-    topics: [...topics.values()].map((t) => ({ ...t, bestQuiz: bestQuiz[t.topic] ?? null })),
+    topics: [...topics.values()],
     achievements: ACHIEVEMENTS.map((a) => ({
       id: a.id, title: a.title, hint: a.hint, group: a.group, secret: !!a.secret,
       unlockedAt: db.game.achievements[a.id] ?? null,
@@ -988,8 +980,9 @@ app.get('/api/stats', (_req, res) => {
   const cards = Object.values(db.cards)
   const byTopic = {}
   for (const c of cards) {
-    byTopic[c.topic] ??= { topic: c.topic, title: c.topicTitle, total: 0, new: 0, learning: 0, review: 0, mature: 0 }
-    const t = byTopic[c.topic]
+    const area = areaOf(c.topic, c.topicTitle)
+    byTopic[area.id] ??= { topic: area.id, title: area.title, total: 0, new: 0, learning: 0, review: 0, mature: 0 }
+    const t = byTopic[area.id]
     t.total += 1
     if (c.srs.state === 'new') t.new += 1
     else if (c.srs.state === 'review') {
@@ -1007,7 +1000,7 @@ app.get('/api/stats', (_req, res) => {
     .filter((c) => c.srs.lapses > 0)
     .sort((a, b) => b.srs.lapses - a.srs.lapses || a.srs.ease - b.srs.ease)
     .slice(0, 12)
-    .map((c) => ({ id: c.id, question: c.question, topic: c.topic, lapses: c.srs.lapses, ease: c.srs.ease }))
+    .map((c) => ({ id: c.id, question: c.question, topic: areaOf(c.topic, c.topicTitle).title, lapses: c.srs.lapses, ease: c.srs.ease }))
 
   res.json({ byTopic: Object.values(byTopic), retention, daily: db.daily, weakest, total: cards.length })
 })
@@ -1016,7 +1009,7 @@ app.post('/api/reset-progress', (req, res) => {
   const db = getDb()
   const scope = req.body?.topic
   for (const card of Object.values(db.cards)) {
-    if (scope && card.topic !== scope) continue
+    if (scope && areaOf(card.topic).id !== areaOf(scope).id) continue
     card.srs = newSrs()
   }
   if (!scope) {

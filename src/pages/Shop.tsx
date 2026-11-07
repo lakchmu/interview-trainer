@@ -160,13 +160,13 @@ export function Shop({ data }: { data: AppData }) {
       <table className="rates">
         <tbody>
           <tr><td>Закрытая дневная цель</td><td><b>25</b></td><td className="hint">главный источник</td></tr>
-          <tr><td>Бонус за серию</td><td><b>+3</b></td><td className="hint">× длину серии, максимум за 7 дней</td></tr>
+          <tr><td>Бонус за дни подряд</td><td><b>+3</b></td><td className="hint">× число дней, максимум за 7</td></tr>
           <tr><td>Разбор карточки</td><td><b>1</b></td><td className="hint">честное «снова» тоже считается</td></tr>
           <tr><td>Карточка выучена надолго</td><td><b>5</b></td><td className="hint">интервал дорос до 21 дня</td></tr>
           <tr><td>Мини-тест на 80%+</td><td><b>8</b></td><td className="hint">без ошибок — 15</td></tr>
           <tr><td>Проверка на вопросах ревьюера</td><td><b>12</b></td><td className="hint">за пройденный прогон</td></tr>
           <tr><td>Карточка из конспекта</td><td><b>2</b></td><td className="hint">за каждую созданную</td></tr>
-          <tr className="dim"><td>Чтение конспекта</td><td><b>0</b></td><td className="hint">даёт опыт, но не ману — намеренно</td></tr>
+          <tr className="dim"><td>Чтение конспекта</td><td><b>0</b></td><td className="hint">маны не даёт — намеренно</td></tr>
         </tbody>
       </table>
     </>

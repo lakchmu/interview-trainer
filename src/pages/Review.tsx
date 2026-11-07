@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { api } from '../api'
 import { preview } from '../../shared/srs.js'
+import { areaOf, areasOf } from '../../shared/topics.js'
 import { Markdown } from '../components/Markdown'
 import type { AppData } from '../App'
 import type { Card, Grade, QueueResponse } from '../types'
@@ -35,6 +36,7 @@ export function Review({ data }: { data: AppData }) {
   const [done, setDone] = useState(0)
   const shownAt = useRef(Date.now())
   const [busy, setBusy] = useState(false)
+  const [filtersOpen, setFiltersOpen] = useState(false)
 
   const byId = useMemo(() => new Map(data.cards.map((c) => [c.id, c])), [data.cards])
 
@@ -76,6 +78,8 @@ export function Review({ data }: { data: AppData }) {
         setIndex((i) => i + 1)
         setRevealed(false)
         shownAt.current = Date.now()
+        // После длинного ответа следующий вопрос иначе остался бы выше экрана
+        window.scrollTo(0, 0)
         await data.reload()
       } finally {
         setBusy(false)
@@ -87,7 +91,7 @@ export function Review({ data }: { data: AppData }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') return
       if (e.key === ' ' || e.key === 'Enter') {
         e.preventDefault()
         if (!revealed) setRevealed(true)
@@ -111,7 +115,7 @@ export function Review({ data }: { data: AppData }) {
     setParams(next)
   }
 
-  const topics = [...new Map(data.cards.map((c) => [c.topic, c.topicTitle])).entries()]
+  const topics = areasOf(data.cards)
 
   // Пунктов может быть несколько через запятую — так ведёт шаг расписания
   const programTopics = programFilter
@@ -152,29 +156,40 @@ export function Review({ data }: { data: AppData }) {
     </div>
   ) : null
 
+  const activeFilters = [topicFilter, sourceFilter, tagFilter].filter(Boolean).length
+  // Пустая очередь при включённых фильтрах: сразу видно, чем она ограничена
+  const showFilters = filtersOpen || (!card && activeFilters > 0)
+
   const filterBar = (
     <div className="filters">
-      <select value={topicFilter} onChange={(e) => setFilter('topic', e.target.value)}>
-        <option value="">Все темы</option>
-        {topics.map(([id, title]) => (
-          <option key={id} value={id}>
-            {title}
-          </option>
-        ))}
-      </select>
-      <select value={sourceFilter} onChange={(e) => setFilter('source', e.target.value)}>
-        <option value="">Любой источник</option>
-        <option value="generated">Сгенерированные</option>
-        <option value="notes">Из конспектов</option>
-        <option value="manual">Свои</option>
-      </select>
-      <select value={tagFilter} onChange={(e) => setFilter('tag', e.target.value)}>
-        <option value="">Все карточки</option>
-        <option value="устно">Только ответы вслух</option>
-        <option value="грабли">Только подводные камни</option>
-        <option value="код">Только код</option>
-        <option value="таблица">Только таблицы</option>
-      </select>
+      <button className="btn ghost sm" aria-expanded={showFilters} onClick={() => setFiltersOpen(!showFilters)}>
+        Фильтры{activeFilters > 0 && ` · ${activeFilters}`}
+      </button>
+      {showFilters && (
+        <>
+          <select value={topicFilter && areaOf(topicFilter).id} onChange={(e) => setFilter('topic', e.target.value)}>
+            <option value="">Все темы</option>
+            {topics.map(([id, title]) => (
+              <option key={id} value={id}>
+                {title}
+              </option>
+            ))}
+          </select>
+          <select value={sourceFilter} onChange={(e) => setFilter('source', e.target.value)}>
+            <option value="">Любой источник</option>
+            <option value="generated">Сгенерированные</option>
+            <option value="notes">Из конспектов</option>
+            <option value="manual">Свои</option>
+          </select>
+          <select value={tagFilter} onChange={(e) => setFilter('tag', e.target.value)}>
+            <option value="">Все карточки</option>
+            <option value="устно">Только ответы вслух</option>
+            <option value="грабли">Только подводные камни</option>
+            <option value="код">Только код</option>
+            <option value="таблица">Только таблицы</option>
+          </select>
+        </>
+      )}
       <span className="spacer" />
       <span className="pill ghost">разобрано за сессию: {done}</span>
     </div>
@@ -220,7 +235,7 @@ export function Review({ data }: { data: AppData }) {
       <article className="flashcard" data-source={card.source}>
         <div className="flashcard-meta">
           <span className={`pill ${card.source}`}>{SOURCE_LABEL[card.source]}</span>
-          <span className="pill ghost">{card.topicTitle}</span>
+          <span className="pill ghost">{areaOf(card.topic, card.topicTitle).title}</span>
           <span className="pill ghost">{card.level}</span>
           {card.tags.slice(0, 3).map((tag) => (
             <span className="pill" key={tag}>
@@ -268,7 +283,7 @@ export function Review({ data }: { data: AppData }) {
               <button className="btn primary" onClick={() => setRevealed(true)}>
                 Показать ответ
               </button>
-              <p style={{ marginTop: 10 }}>
+              <p className="keys-hint" style={{ marginTop: 10 }}>
                 <span className="kbd">Space</span> — показать, затем{' '}
                 <span className="kbd">1</span>–<span className="kbd">4</span> — оценка
               </p>
@@ -305,6 +320,7 @@ function CardActions({ card, data, onDone }: { card: Card; data: AppData; onDone
       <button
         className="btn ghost sm"
         onClick={async () => {
+          if (!confirm('Сбросить прогресс этой карточки?')) return
           await api.resetCard(card.id)
           data.toast('Прогресс карточки сброшен')
           await data.reload()

@@ -41,3 +41,6 @@ README.local.md
 
 # Скриншоты для hh — не для репозитория
 portfolio-shots/
+
+# Черновики для внешних чатов (scripts/selfcheck-draft.mjs) — из приватных конспектов
+tmp/

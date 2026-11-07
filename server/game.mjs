@@ -101,7 +101,7 @@ export const ACHIEVEMENTS = [
     check: (g) => g.stats.reviews >= 1 },
   { id: 'first-quiz', title: 'Проверка снаряжения', hint: 'Пройти первый мини-тест', group: 'Начало',
     check: (g) => g.stats.quizAttempts >= 1 },
-  { id: 'first-checkup', title: 'Взгляд на маршрут', hint: 'Пройти экспресс-проверку уровня', group: 'Начало',
+  { id: 'first-checkup', title: 'Взгляд на маршрут', hint: 'Пройти вопросы ревьюера уровня', group: 'Начало',
     check: (g) => g.stats.checkups >= 1 },
 
   { id: 'reviews-50', title: 'Первая полусотня', hint: '50 разборов карточек', group: 'Объём',
@@ -175,7 +175,7 @@ export const ACHIEVEMENTS = [
     check: (g) => (g.stats.sectionChecks ?? 0) >= 1 },
   { id: 'recall-25', title: 'Читаю и удерживаю', hint: '25 разделов с проверкой сразу после чтения', group: 'Разведка',
     check: (g) => (g.stats.sectionChecks ?? 0) >= 25 },
-  { id: 'recall-all', title: 'Первый проход закрыт', hint: 'Проверить себя по всем 58 разделам конспектов', group: 'Разведка',
+  { id: 'recall-all', title: 'Первый проход закрыт', hint: 'Самопроверка по всем 58 разделам конспектов', group: 'Разведка',
     check: (g) => (g.stats.sectionChecks ?? 0) >= 58 },
   { id: 'recall-perfect', title: 'Ничего не потеряла', hint: '10 разделов вспомнены целиком, без единого промаха', group: 'Разведка',
     check: (g) => (g.stats.sectionsPerfect ?? 0) >= 10 },

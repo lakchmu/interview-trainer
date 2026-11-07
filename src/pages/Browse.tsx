@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { areaOf, areasOf } from '../../shared/topics.js'
 import { api } from '../api'
 import { Markdown } from '../components/Markdown'
 import { CardEditor } from '../components/CardEditor'
@@ -22,6 +23,9 @@ function plainTitle(question: string) {
     .trim()
 }
 
+/** Сколько карточек дорисовывать за раз: все сразу — это десятки тысяч пикселей. */
+const PAGE = 50
+
 const STATE_LABEL: Record<string, string> = {
   new: 'новая',
   learning: 'учится',
@@ -38,16 +42,16 @@ export function Browse({ data }: { data: AppData }) {
   const [open, setOpen] = useState<string | null>(null)
   const [editing, setEditing] = useState<Card | 'new' | null>(null)
 
-  const topics = useMemo(
-    () => [...new Map(data.cards.map((c) => [c.topic, c.topicTitle])).entries()],
-    [data.cards],
-  )
+  const [limit, setLimit] = useState(PAGE)
+  const more = useRef<HTMLButtonElement>(null)
+
+  const topics = useMemo(() => areasOf(data.cards), [data.cards])
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase()
     return data.cards
       .filter((c) => {
-        if (topic && c.topic !== topic) return false
+        if (topic && areaOf(c.topic).id !== topic) return false
         if (sources.length && !sources.includes(c.source)) return false
         if (state === 'suspended' ? !c.suspended : state && c.srs.state !== state) return false
         if (needle) {
@@ -58,6 +62,21 @@ export function Browse({ data }: { data: AppData }) {
       })
       .sort((a, b) => a.topic.localeCompare(b.topic) || a.id.localeCompare(b.id))
   }, [data.cards, query, topic, sources, state])
+
+  useEffect(() => setLimit(PAGE), [query, topic, sources, state])
+
+  // Дорисовываем заранее, пока до конца списка ещё остаётся прокрутка
+  useEffect(() => {
+    if (!more.current) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) setLimit((n) => n + PAGE)
+      },
+      { rootMargin: '400px' },
+    )
+    observer.observe(more.current)
+    return () => observer.disconnect()
+  }, [limit, filtered.length])
 
   const toggleSource = (s: Source) =>
     setSources((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]))
@@ -71,7 +90,9 @@ export function Browse({ data }: { data: AppData }) {
         </button>
       </div>
       <p className="subtitle">
-        Всего {data.cards.length}, показано {filtered.length}. Цвет полосы слева — источник карточки.
+        Всего {data.cards.length}, показано {filtered.length}. Цвет полосы слева — источник:{' '}
+        <span className="pill gen">сгенерировано</span> <span className="pill notes">из конспектов</span>{' '}
+        <span className="pill manual">свои</span>
       </p>
 
       <div className="filters">
@@ -120,7 +141,7 @@ export function Browse({ data }: { data: AppData }) {
           <p>Смягчи фильтры или добавь карточку.</p>
         </div>
       ) : (
-        filtered.map((card) => (
+        filtered.slice(0, limit).map((card) => (
           <div
             className={`list-item ${card.suspended ? 'suspended' : ''}`}
             data-source={card.source}
@@ -134,7 +155,7 @@ export function Browse({ data }: { data: AppData }) {
               <div className="list-q">
                 <div className="truncate">{plainTitle(card.question)}</div>
               </div>
-              <span className="pill ghost">{card.topicTitle}</span>
+              <span className="pill ghost">{areaOf(card.topic, card.topicTitle).title}</span>
               {card.srs.state === 'review' && (
                 <span className="pill ghost">{card.srs.interval} д</span>
               )}
@@ -163,6 +184,7 @@ export function Browse({ data }: { data: AppData }) {
                   <button
                     className="btn sm"
                     onClick={async () => {
+                      if (!confirm('Сбросить прогресс этой карточки?')) return
                       await api.resetCard(card.id)
                       data.toast('Прогресс сброшен')
                       await data.reload()
@@ -192,6 +214,14 @@ export function Browse({ data }: { data: AppData }) {
             )}
           </div>
         ))
+      )}
+
+      {filtered.length > limit && (
+        <div className="row" style={{ justifyContent: 'center', marginTop: 14 }}>
+          <button className="btn" ref={more} onClick={() => setLimit((n) => n + PAGE)}>
+            Показать ещё · осталось {filtered.length - limit}
+          </button>
+        </div>
       )}
 
       {editing && (

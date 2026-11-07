@@ -20,27 +20,6 @@ function heatDays() {
   return days
 }
 
-function streakOf(daily: Stats['daily']) {
-  let streak = 0
-  const d = new Date()
-  for (;;) {
-    const key = d.toISOString().slice(0, 10)
-    const entry = daily[key]
-    const worked = entry && entry.new + entry.reviews > 0
-    if (!worked) {
-      // сегодняшний день ещё не «сломал» серию — просто ещё не занимались
-      if (streak === 0 && key === new Date().toISOString().slice(0, 10)) {
-        d.setDate(d.getDate() - 1)
-        continue
-      }
-      break
-    }
-    streak += 1
-    d.setDate(d.getDate() - 1)
-  }
-  return streak
-}
-
 export function Dashboard({ data }: { data: AppData }) {
   const [stats, setStats] = useState<Stats | null>(null)
 
@@ -76,14 +55,19 @@ export function Dashboard({ data }: { data: AppData }) {
   const totalToday = due + learning + plannedNew
   const days = heatDays()
   const maxDay = Math.max(1, ...Object.values(stats.daily).map((d) => d.new + d.reviews))
+  const game = data.game
 
   return (
     <>
       <h1>Обзор</h1>
       <p className="subtitle">
+        {game &&
+          (game.game.daily.met
+            ? 'Цель дня закрыта. '
+            : `Цель дня: ${game.progress.total} из ${game.game.daily.goal}. `)}
         {totalToday > 0
-          ? `Сегодня к разбору ${totalToday} ${plural(totalToday, 'карточка', 'карточки', 'карточек')}.`
-          : 'На сегодня всё повторено. Можно добавить новых карточек или отдохнуть.'}
+          ? `В очереди ${totalToday} ${plural(totalToday, 'карточка', 'карточки', 'карточек')}.`
+          : 'Очередь пуста. Можно добавить новых карточек или отдохнуть.'}
       </p>
 
       <SceneCard data={data} />
@@ -95,19 +79,7 @@ export function Dashboard({ data }: { data: AppData }) {
         </div>
         <div className="stat new">
           <div className="value">{plannedNew}</div>
-          <div className="label">новых на сегодня (из {fresh})</div>
-        </div>
-        <div className="stat">
-          <div className="value">{today.new + today.reviews}</div>
-          <div className="label">разобрано сегодня</div>
-        </div>
-        <div className="stat">
-          <div className="value">{stats.retention === null ? '—' : `${Math.round(stats.retention * 100)}%`}</div>
-          <div className="label">удержание (200 последних)</div>
-        </div>
-        <div className="stat">
-          <div className="value">{streakOf(stats.daily)}</div>
-          <div className="label">дней подряд</div>
+          <div className="label">новых в очереди (всего новых {fresh})</div>
         </div>
       </div>
 

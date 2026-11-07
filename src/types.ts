@@ -185,11 +185,9 @@ export interface PeakProgress {
   topic: string
   title: string
   /** Тема из собственных конспектов, а не из готовой базы. */
-  kb: boolean
   total: number
   seen: number
   mastered: number
-  bestQuiz: number | null
 }
 
 export interface ReadingCoverage {

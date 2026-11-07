@@ -187,7 +187,7 @@ export function Interview({ data }: { data: AppData }) {
 
     return (
       <>
-        <h1>Результат проверки</h1>
+        <h1>Результат</h1>
         <p className="subtitle">
           Уверенно отвечаешь на <b>{saved.know}</b> из {saved.total} вопросов — {percent}%
           {prevPercent !== null && (
@@ -284,22 +284,22 @@ export function Interview({ data }: { data: AppData }) {
       <div className="row between">
         <h1>Вопросы ревьюера</h1>
         <button className="btn primary" onClick={() => startRun()}>
-          Экспресс-проверка ({questions.length})
+          Пройти все · {questions.length}
         </button>
       </div>
       <p className="subtitle">
         {questions.length} вопросов — ровно то, что спрашивали на реальном собеседовании, дословно.
         {last
-          ? ` Последняя проверка: ${new Date(last.ts).toLocaleDateString('ru')} — ${Math.round(
+          ? ` Последний проход: ${new Date(last.ts).toLocaleDateString('ru')} — ${Math.round(
               (last.know / last.total) * 100,
             )}% уверенных ответов.`
-          : ' Проверка ещё не проводилась.'}
+          : ' Ещё не проходила.'}
       </p>
 
       {last && (
         <div className="card-surface" style={{ marginBottom: 20 }}>
           <div className="row between" style={{ marginBottom: 10 }}>
-            <b style={{ fontSize: 14 }}>Итог последней проверки</b>
+            <b style={{ fontSize: 14 }}>Итог последнего прохода</b>
             <span className="hint">{new Date(last.ts).toLocaleString('ru')}</span>
           </div>
           <div className="bar" style={{ height: 12 }}>
@@ -327,7 +327,7 @@ export function Interview({ data }: { data: AppData }) {
                   </span>
                 )}
                 <button className="btn ghost sm" onClick={() => startRun(items)}>
-                  Проверить тему
+                  Пройти тему
                 </button>
               </div>
             </div>

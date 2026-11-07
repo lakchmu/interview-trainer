@@ -24,7 +24,7 @@
   --border-strong: rgba(178, 143, 172, 0.42);
   --text: #f7ebe4;
   --text-dim: #c4aab8;
-  --text-faint: #9784a0;
+  --text-faint: #b5a8bc;
 
   --accent: #ffab7a;
   --on-accent: #3a1a10;
@@ -57,7 +57,7 @@
   --border-strong: rgba(48, 104, 132, 0.34);
   --text: #12313f;
   --text-dim: #476878;
-  --text-faint: #7796a5;
+  --text-faint: #526772;
 
   --accent: #0e7ba6;
   --on-accent: #f2fbff;
@@ -90,7 +90,7 @@
   --border-strong: rgba(212, 133, 140, 0.42);
   --text: #ffeade;
   --text-dim: #dba9ac;
-  --text-faint: #b1838d;
+  --text-faint: #cdb0b6;
 
   --accent: #ff9e6b;
   --on-accent: #3d1508;
@@ -123,7 +123,7 @@
   --border-strong: rgba(150, 154, 210, 0.4);
   --text: #e9ecff;
   --text-dim: #a8adcf;
-  --text-faint: #8085a8;
+  --text-faint: #979bb8;
 
   --accent: #93a8ff;
   --on-accent: #101736;
@@ -156,7 +156,7 @@
   --border-strong: rgba(134, 152, 200, 0.36);
   --text: #e2e9fa;
   --text-dim: #98a5c5;
-  --text-faint: #6e7a99;
+  --text-faint: #7f8aa5;
 
   --accent: #7fa6f9;
   --on-accent: #071026;
@@ -397,7 +397,29 @@ a:hover { text-decoration: underline; }
 }
 .nav-link:hover { background: var(--bg-elev-2); color: var(--text); text-decoration: none; }
 .nav-link.active { background: var(--bg-elev-2); color: var(--text); font-weight: 550; }
-.nav-link .pill { font-size: 11px; }
+.nav-link .pill { font-size: 11px; gap: 4px; }
+
+/* Вкладки внутри пункта меню */
+.section-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 0 18px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev);
+}
+.section-tab {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.section-tab:hover { color: var(--text); text-decoration: none; }
+.section-tab.active { background: var(--bg-elev-2); color: var(--text); font-weight: 550; }
 
 .sidebar-foot {
   /*
@@ -415,9 +437,7 @@ a:hover { text-decoration: underline; }
   gap: 18px;
 }
 
-.legend { display: flex; flex-direction: column; align-items: flex-start; gap: 7px; }
-
-.sky-picker { display: flex; flex-direction: column; gap: 10px; }
+.sky-picker { display: flex; flex-direction: column; gap: 10px; max-width: 320px; }
 .sky-picker select {
   width: 100%;
   /* Справа оставляем место под стрелку, иначе текст заезжает под неё */
@@ -645,7 +665,21 @@ textarea { resize: vertical; min-height: 96px; font-family: var(--mono); font-si
 .question p:first-child { margin-top: 0; }
 .answer { border-top: 1px solid var(--border); margin-top: 22px; padding-top: 20px; }
 
-.grade-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 20px; }
+/* Длинный ответ не должен уводить оценки за нижний край экрана */
+.grade-row {
+  position: sticky;
+  bottom: 10px;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 20px -8px 0;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  box-shadow: var(--shadow);
+}
 .grade {
   display: flex;
   flex-direction: column;
@@ -680,6 +714,11 @@ textarea { resize: vertical; min-height: 96px; font-family: var(--mono); font-si
   background: var(--bg-elev-2);
   font: 11px/1.5 var(--mono);
   color: var(--text-dim);
+}
+
+/* Клавиши не нужны там, где нет клавиатуры */
+@media (hover: none) {
+  .keys-hint, .grade .kbd { display: none; }
 }
 
 .reveal-hint { text-align: center; color: var(--text-faint); font-size: 13px; margin-top: 18px; }
@@ -885,6 +924,7 @@ textarea { resize: vertical; min-height: 96px; font-family: var(--mono); font-si
 /* ------------------------------------------------------------ заметки */
 
 .notes-layout { display: grid; grid-template-columns: 280px 1fr; gap: 20px; align-items: start; }
+.notes-list-toggle { display: none; }
 .notes-list { border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-elev); backdrop-filter: blur(12px); overflow: hidden; position: sticky; top: 28px; max-height: calc(100vh - 60px); overflow-y: auto; }
 .note-file {
   position: relative;
@@ -1048,9 +1088,20 @@ textarea { resize: vertical; min-height: 96px; font-family: var(--mono); font-si
   .nav.open { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 8px; width: 100%; padding-top: 8px; }
   .nav .nav-link.group-start::before { display: none; }
   .sidebar-foot { display: none; }
+  /* Колонка занимает всю ширину, и светило оказалось бы прямо за текстом */
+  .sky:not(.framed) .celestial[data-body] { transform: scale(0.55); opacity: 0.45; box-shadow: none; }
   .main { padding: 20px 16px 48px; }
   .notes-layout { grid-template-columns: minmax(0, 1fr); }
-  .notes-list { position: static; max-height: 320px; }
+  .notes-list { position: static; max-height: 60vh; }
+  .notes-list:not(.open) { display: none; }
+  .notes-list-toggle {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    margin-bottom: 12px;
+  }
+  .notes-list-toggle .truncate { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .topic-row { grid-template-columns: 1fr; gap: 6px; }
 }
 
@@ -1102,7 +1153,6 @@ textarea { resize: vertical; min-height: 96px; font-family: var(--mono); font-si
 }
 .goal-ring.met i { color: var(--ok); font-size: 13px; }
 
-.pill.streak { background: color-mix(in srgb, var(--hard) 16%, transparent); color: var(--hard); }
 
 .today-card { border-left: 3px solid var(--accent); }
 
@@ -1137,7 +1187,6 @@ textarea { resize: vertical; min-height: 96px; font-family: var(--mono); font-si
 }
 .peak.done .peak-shape { background: linear-gradient(180deg, var(--ok), color-mix(in srgb, var(--ok) 35%, transparent)); }
 .peak-name { font-size: 10.5px; line-height: 1.25; }
-.peak-pct { font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; }
 
 .boss { border-left: 3px solid var(--manual); }
 
@@ -1186,10 +1235,6 @@ textarea { resize: vertical; min-height: 96px; font-family: var(--mono); font-si
 .reward-pop b { display: block; font-size: 14px; }
 .reward-pop small { display: block; font-size: 11.5px; color: var(--text-faint); margin-top: 1px; }
 .reward-icon { font-size: 17px; }
-.reward-pop.xp { padding: 7px 13px; }
-.reward-pop.xp .reward-icon { color: var(--accent); }
-.reward-pop.level { border-color: var(--accent); }
-.reward-pop.level .reward-icon { color: var(--accent); }
 .reward-pop.goal { border-color: color-mix(in srgb, var(--ok) 55%, transparent); }
 .reward-pop.goal .reward-icon { color: var(--ok); }
 .reward-pop.achievement { border-color: color-mix(in srgb, var(--warn) 55%, transparent); }
@@ -1204,8 +1249,6 @@ textarea { resize: vertical; min-height: 96px; font-family: var(--mono); font-si
   .reward-pop { animation: none; }
   .xp-bar i, .peak-shape { transition: none; }
 }
-.peak.kb .peak-shape { background: linear-gradient(180deg, var(--notes), color-mix(in srgb, var(--notes) 35%, transparent)); }
-.peak.kb.done .peak-shape { background: linear-gradient(180deg, var(--ok), color-mix(in srgb, var(--ok) 35%, transparent)); }
 
 /* прочитанные разделы конспекта */
 .section-block.read { border-color: color-mix(in srgb, var(--ok) 40%, transparent); }
@@ -1243,15 +1286,6 @@ textarea { resize: vertical; min-height: 96px; font-family: var(--mono); font-si
   border-color: color-mix(in srgb, var(--mana) 40%, transparent);
 }
 
-.mana-line {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 6px;
-  font-size: 12px;
-  color: var(--mana);
-}
-.mana-line small { color: var(--text-faint); }
 
 .mana-header {
   display: flex;
@@ -1842,11 +1876,13 @@ a.scene-hint:hover { border-color: var(--border-strong); }
   gap: 10px;
   margin-bottom: 22px;
   padding: 0 2px;
-  color: var(--text-dim);
+  /* Лежит на небе, как и .subtitle: приглушённый цвет здесь не читается */
+  color: var(--text);
   font-size: 13px;
   line-height: 1.6;
 }
-.note-intro > .md { flex: 1; }
+/* Без этого цепочка из inline-кода раздвигает страницу на телефоне */
+.note-intro > .md { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .note-intro > .md > :first-child { margin-top: 0; }
 .note-intro > .md > :last-child { margin-bottom: 0; }
 .note-intro strong { color: var(--text); }
@@ -1951,24 +1987,6 @@ input[type='checkbox']:checked::before { transform: scale(1); }
 .note-group { scroll-margin-top: 16px; }
 
 /* Общая шкала по всем конспектам — считается в знаках, а не в карточках */
-.notes-scale {
-  margin: 0 0 20px;
-  padding: 12px 16px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--bg-elev);
-  backdrop-filter: blur(10px);
-}
-.notes-scale-head {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 9px;
-}
-.notes-scale-head b { font-size: 14px; }
-.notes-scale-head .hint { margin: 0; flex: 1; }
-
 /* ------------------------------------------------- план подготовки */
 
 /* Подпись под названием приложения: под какую компанию оно сейчас настроено */

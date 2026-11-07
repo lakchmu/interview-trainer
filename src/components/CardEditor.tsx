@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { areaOf, deckOf } from '../../shared/topics.js'
 import { api } from '../api'
 import { Markdown } from './Markdown'
 import type { Card, Level } from '../types'
@@ -15,7 +16,8 @@ interface Props {
 export function CardEditor({ card, topics, draft, onClose, onSaved }: Props) {
   const [question, setQuestion] = useState(card?.question ?? draft?.question ?? '')
   const [answer, setAnswer] = useState(card?.answer ?? draft?.answer ?? '')
-  const [topic, setTopic] = useState(card?.topic ?? (draft?.source === 'notes' ? 'notes' : 'custom'))
+  /** Выбирается тема; колода карточки меняется, только если тему сменили. */
+  const [topic, setTopic] = useState(areaOf(card?.topic ?? (draft?.source === 'notes' ? 'notes' : 'custom')).id)
   const [tags, setTags] = useState((card?.tags ?? []).join(', '))
   const [level, setLevel] = useState<Level>(card?.level ?? 'middle')
   const [tab, setTab] = useState<'edit' | 'preview'>('edit')
@@ -31,7 +33,13 @@ export function CardEditor({ card, topics, draft, onClose, onSaved }: Props) {
     return () => window.removeEventListener('keydown', onKey)
   })
 
-  const knownTitle = topics.find(([id]) => id === topic)?.[1]
+  const ownTopics: [string, string][] = [
+    ['custom', 'Мои карточки'],
+    ['notes', 'Мои конспекты'],
+  ]
+  const options = [...topics, ...ownTopics.filter(([id]) => !topics.some(([known]) => known === id))]
+  const knownTitle = options.find(([id]) => id === topic)?.[1]
+  const sameTopic = card && areaOf(card.topic).id === topic
 
   async function save() {
     if (!question.trim() || !answer.trim()) {
@@ -44,8 +52,8 @@ export function CardEditor({ card, topics, draft, onClose, onSaved }: Props) {
       const payload = {
         question,
         answer,
-        topic,
-        topicTitle: knownTitle ?? (topic === 'notes' ? 'Мои конспекты' : 'Мои карточки'),
+        topic: sameTopic ? card.topic : deckOf(topic),
+        topicTitle: sameTopic ? card.topicTitle : knownTitle,
         tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
         level,
         source: draft?.source ?? 'manual',
@@ -98,19 +106,13 @@ export function CardEditor({ card, topics, draft, onClose, onSaved }: Props) {
             <div className="row">
               <div className="field" style={{ flex: 1 }}>
                 <label>Тема</label>
-                <input
-                  type="text"
-                  list="topic-options"
-                  value={topic}
-                  onChange={(e) => setTopic(e.target.value)}
-                />
-                <datalist id="topic-options">
-                  {topics.map(([id, title]) => (
+                <select value={topic} onChange={(e) => setTopic(e.target.value)}>
+                  {options.map(([id, title]) => (
                     <option key={id} value={id}>
                       {title}
                     </option>
                   ))}
-                </datalist>
+                </select>
               </div>
               <div className="field" style={{ flex: 1 }}>
                 <label>Теги (через запятую)</label>

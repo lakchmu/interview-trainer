@@ -1,0 +1,384 @@
+{
+  "file": 9,
+  "note": "Вопросы самопроверки к «9. Vue 3, Pinia и Nuxt 3». Карточка находится по group и title.",
+  "checks": [
+    {
+      "group": 1,
+      "title": "Коротко (что сказать вслух)",
+      "q": "Интервьюер: «Расскажи, как устроен компонент во Vue 3 и чем Vue принципиально отличается от React». Ответь коротко.",
+      "a": "Однофайловый `.vue`: `<script setup>` — логика, `<template>` — разметка с директивами (компилируется в render-функцию), `<style scoped>` — стили.\n\nРеактивность на **Proxy**: при рендере Vue запоминает, что компонент прочитал, и перерисовывает его только при изменении именно этого.\n\nГлавное отличие: код в `setup` выполняется **один раз** при создании, а не на каждый рендер — нет массивов зависимостей, почти не нужна ручная мемоизация."
+    },
+    {
+      "group": 1,
+      "title": "Vue глазами React-разработчика",
+      "q": "Чем во Vue заменяются `useState`, `useMemo`, `useEffect`, колбэк-проп `onChange`, `children`, Context и кастомный хук?",
+      "a": "| React | Vue 3 |\n| --- | --- |\n| `useState` | `ref`, `reactive` — меняют напрямую |\n| `useMemo` | `computed` — зависимости сами |\n| `useEffect` | `watch`, `watchEffect`, `onMounted` |\n| `onChange`-проп | событие через `emit` |\n| `children`, render props | слоты |\n| Context | `provide` / `inject` |\n| кастомный хук | composable — вызывается один раз |\n| Redux, Zustand | Pinia |\n| Next.js | Nuxt |"
+    },
+    {
+      "group": 1,
+      "title": "Однофайловый компонент",
+      "q": "Что выведет кнопка после двух кликов? Почему в шаблоне `count`, а в скрипте `count.value`? Что делает `scoped`?\n\n```vue\n<script setup>\nconst count = ref(0)\nconst double = computed(() => count.value * 2)\n</script>\n<template>\n  <button @click=\"count++\">{{ count }} × 2 = {{ double }}</button>\n</template>\n```",
+      "a": "`2 × 2 = 4`.\n\n- Всё верхнего уровня `<script setup>` доступно в шаблоне.\n- В скрипте к `ref` обращаются через `.value`, **в шаблоне Vue разворачивает сам**.\n- `scoped` добавляет элементам компонента уникальный data-атрибут — селекторы не утекают наружу."
+    },
+    {
+      "group": 1,
+      "title": "Директивы, которые нужно знать",
+      "q": "Назови основные директивы Vue и их сокращения. Какая из них опасна и почему?",
+      "a": "| Директива | Сокращение |\n| --- | --- |\n| `v-if` / `v-else-if` / `v-else` | — условный рендер |\n| `v-show` | — `display: none` |\n| `v-for` | — нужен `:key` |\n| `v-bind:href` | `:href` |\n| `v-on:click` | `@click`, модификаторы `.prevent`, `.stop`, `.once`, `.enter` |\n| `v-model` | — двусторонняя связь |\n| `v-slot:name` | `#name` |\n\n**`v-html`** вставляет строку как HTML — источник **XSS**."
+    },
+    {
+      "group": 1,
+      "title": "v-if или v-show, и почему v-if не ставят рядом с v-for",
+      "q": "Когда брать `v-if`, а когда `v-show`? Что не так с этим кодом и как исправить?\n\n```vue\n<li v-for=\"user in users\" v-if=\"user.active\" :key=\"user.id\">{{ user.name }}</li>\n```",
+      "a": "`v-if` создаёт и удаляет узел — дешевле, если условие **меняется редко**. `v-show` переключает `display` — для **частых** переключений (вкладки, тултипы).\n\nВо Vue 3 у `v-if` **приоритет выше** — переменной `user` он ещё не видит. Решения: отфильтровать в `computed` или вынести `v-for` на `<template>`:\n\n```vue\n<template v-for=\"user in users\" :key=\"user.id\">\n  <li v-if=\"user.active\">{{ user.name }}</li>\n</template>\n```"
+    },
+    {
+      "group": 1,
+      "title": "Как работает реактивность",
+      "q": "Как работает реактивность Vue 3: что такое track и trigger? Когда обновляется DOM? Почему во Vue почти не нужны `memo` и `useCallback`?",
+      "a": "1. `reactive(obj)` — Proxy; `ref(value)` — геттер/сеттер на `.value`.\n2. Чтение (get) → **track**: Vue записывает, какой эффект от чего зависит.\n3. Запись (set) → **trigger**: зависимые эффекты ставятся на перезапуск.\n4. Рендер компонента — тоже эффект: перерисуется только тот, кто читал значение.\n5. DOM обновляется **пачкой в следующем тике** — прочитать обновлённый DOM: `await nextTick()`.\n\nВ React компонент вызывается целиком заново, и лишнее отсекают мемоизацией. Во Vue точные зависимости известны системе."
+    },
+    {
+      "group": 1,
+      "title": "Props вниз, события вверх, слоты",
+      "q": "Как ребёнок `UserCard` сообщает родителю о выборе и передаёт данные в слот? Можно ли ребёнку поменять проп `user`?\n\n```vue\n<UserCard :user=\"user\" @select=\"onSelect\">\n  <template #footer=\"{ isOnline }\">…</template>\n</UserCard>\n```",
+      "a": "Ребёнок объявляет событие и слот:\n\n```vue\nconst emit = defineEmits<{ select: [id: number] }>()\n<article @click=\"emit('select', user.id)\">\n  <slot name=\"footer\" :is-online=\"user.online\" />\n</article>\n```\n\nПоток данных **односторонний**: менять проп нельзя (Vue предупредит), нужно событие родителю. Слот без имени — аналог `children`, слот с данными — аналог render props."
+    },
+    {
+      "group": 1,
+      "title": "Жизненный цикл",
+      "q": "Назови хуки жизненного цикла Vue и их аналоги в React. В каком порядке срабатывает `onMounted` у родителя и ребёнка? Что ловит ошибки потомков?",
+      "a": "| Хук | Аналог |\n| --- | --- |\n| код `<script setup>` | тело компонента, но один раз |\n| `onMounted` | `useEffect(fn, [])` |\n| `onUpdated` | `useEffect` без массива |\n| `onBeforeUnmount` / `onUnmounted` | cleanup `useEffect` |\n\nМонтирование — **изнутри наружу**: `onMounted` ребёнка раньше родителя. При SSR `onMounted` и хуки обновления не вызываются.\n\n`onErrorCaptured` — аналог Error Boundary; `onActivated`/`onDeactivated` — внутри `<KeepAlive>`."
+    },
+    {
+      "group": 1,
+      "title": "Подводные камни",
+      "q": "Верно или нет?\n\n1. «`const { count } = state` из `reactive` сохраняет реактивность».\n2. «Индекс массива в `:key` — нормально».\n3. «Сразу после изменения состояния DOM уже обновлён».",
+      "a": "1. Нет — получаешь обычное число. Лечится `toRefs(state)`.\n2. Нет — та же ошибка, что в React: при вставке и сортировке состояние строк перепутается.\n3. Нет — DOM обновится в следующем тике, нужен `nextTick()`.\n\nИ в скрипте без `.value` получаешь обёртку, а не значение."
+    },
+    {
+      "group": 1,
+      "title": "💡 Что изменилось между Vue 2 и Vue 3",
+      "q": "Что изменилось между Vue 2 и Vue 3? С каких трёх пунктов начать ответ?",
+      "a": "Главное:\n1. **Реактивность**: `Object.defineProperty` (новые свойства и запись по индексу не отслеживались, нужен был `$set`) → **Proxy**, отслеживается всё.\n2. **Логика**: Options API и миксины → **Composition API**, `<script setup>`, composables.\n3. **Стор**: Vuex с мутациями → **Pinia** без мутаций.\n\nДальше по запросу: несколько корней шаблона; `v-model` на компоненте — `modelValue`/`update:modelValue`, можно несколько, `.sync` убран; у `v-if` приоритет над `v-for`; `createApp()` вместо `new Vue()`; убраны фильтры и `$on`/`$off`; в Nuxt — `useAsyncData`/`useFetch` и `[id].vue`."
+    },
+    {
+      "group": 2,
+      "title": "Коротко (что сказать вслух)",
+      "q": "Что такое Composition API и чем composable отличается от кастомного хука React?",
+      "a": "Логика компонента — функциями: состояние `ref`/`reactive`, производные `computed`, эффекты `watch`/`watchEffect`, жизненный цикл `onMounted` и др. Группируется **по смыслу**, а не по опциям, и выносится в composables `useSomething`.\n\nОтличие от хука: **`setup` выполняется один раз** — нет правил хуков, устаревших замыканий и массивов зависимостей; зависимости Vue собирает по фактическим чтениям."
+    },
+    {
+      "group": 2,
+      "title": "ref и reactive: что выбрать",
+      "q": "Чем `ref` отличается от `reactive`? Что советует документация брать по умолчанию?",
+      "a": "| | `ref` | `reactive` |\n| --- | --- | --- |\n| принимает | любое значение | только объекты, массивы, Map, Set |\n| доступ | `.value` | напрямую |\n| заменить целиком | можно | нельзя — связь потеряется |\n| деструктуризация | остаётся ref | теряет реактивность |\n| вернуть из composable | удобно | нужен `toRefs` |\n\nПо умолчанию — **`ref`**: нет ловушек с заменой и деструктуризацией. `reactive` — для группы полей, которую не заменяют и не разбирают."
+    },
+    {
+      "group": 2,
+      "title": "computed: кэш и правила",
+      "q": "Чем `computed` отличается от метода в шаблоне? Какие правила у геттера `computed`?",
+      "a": "- **Кэш**: пересчитывается, только когда изменилась прочитанная зависимость; метод в шаблоне выполняется на **каждом рендере**.\n- **Ленивость**: пока никто не читает — не вызывается.\n- Геттер **чистый**: без запросов, мутаций и DOM — для эффектов есть `watch`.\n- Результат только для чтения; нужна запись — объект с `get` и `set`.\n- Массив зависимостей не пишут — забыть зависимость невозможно."
+    },
+    {
+      "group": 2,
+      "title": "watch и watchEffect",
+      "q": "Чем `watch` отличается от `watchEffect`? Какие опции у `watch`? Как отменить устаревший запрос в этом наблюдателе?\n\n```ts\nwatch(userId, async (id) => {\n  user.value = await $fetch(`/api/users/${id}`)\n})\n```",
+      "a": "| | `watch` | `watchEffect` |\n| --- | --- | --- |\n| следит за | явным источником | всем прочитанным |\n| первый запуск | только при изменении | сразу |\n| старое значение | есть | нет |\n\nОпции: `immediate`, `deep`, `flush: 'post'` (после обновления DOM).\n\n```ts\nwatch(userId, async (id, _old, onCleanup) => {\n  const controller = new AbortController()\n  onCleanup(() => controller.abort())\n  user.value = await $fetch(`/api/users/${id}`, { signal: controller.signal })\n})\n```\n\n`onCleanup` — то же, что функция очистки `useEffect`."
+    },
+    {
+      "group": 2,
+      "title": "Что передавать в watch первым аргументом",
+      "q": "Какой из вызовов не сработает и почему? Когда геттер, возвращающий объект, не заметит изменений?\n\n```ts\nwatch(count, cb)\nwatch(() => props.id, cb)\nwatch(props.id, cb)\n```",
+      "a": "**`watch(props.id, cb)`** — в `watch` уходит уже прочитанное число, следить не за чем. Свойство пропа или `reactive` оборачивают в **геттер**.\n\nRef, геттер, reactive-объект (глубоко) и массив источников работают.\n\nГеттер `() => state.user` срабатывает только при **замене объекта целиком**; изменения внутри ловят с `deep: true`."
+    },
+    {
+      "group": 2,
+      "title": "Composables — аналог кастомных хуков",
+      "q": "Напиши composable `useCounter`. Чем он отличается от хука React? Какое у composables одно ограничение?",
+      "a": "```ts\nexport function useCounter(initial = 0) {\n  const count = ref(initial)\n  const double = computed(() => count.value * 2)\n  const inc = () => count.value++\n  return { count, double, inc }\n}\nconst { count, double, inc } = useCounter(10) // это ref — деструктурировать можно\n```\n\nВызывается **один раз** в `setup`, нет ограничений по порядку, массивов зависимостей и устаревших замыканий.\n\nОграничение: хуки жизненного цикла и наблюдатели внутри должны регистрироваться **синхронно**, пока выполняется `setup`."
+    },
+    {
+      "group": 2,
+      "title": "Макросы script setup",
+      "q": "Какие есть макросы `<script setup>` и для чего каждый? Почему их не импортируют? Как получить ссылку на DOM-узел?",
+      "a": "| Макрос | Зачем |\n| --- | --- |\n| `defineProps` | входные параметры |\n| `defineEmits` | события |\n| `defineModel` | `v-model` на компоненте (3.4+) |\n| `defineExpose` | открыть родителю методы |\n| `defineOptions` | опции вроде `inheritAttrs` |\n\nЭто **подсказки компилятору**, в рантайме таких функций нет.\n\nDOM-узел: `const input = ref<HTMLInputElement | null>(null)` и `ref=\"input\"` в шаблоне — значение появится к `onMounted`."
+    },
+    {
+      "group": 2,
+      "title": "Composition API и Options API",
+      "q": "Чем Composition API лучше Options API? Исчезает ли Options API?",
+      "a": "| | Options API | Composition API |\n| --- | --- | --- |\n| логика фичи | размазана по опциям | одним куском |\n| переиспользование | миксины: конфликты имён | composables: явный импорт |\n| TypeScript | с трудом, везде `this` | обычные переменные |\n\nOptions API **поддерживается** и не исчезает, но в вакансиях обычно Composition API, и новый код на Vue 3 пишут на нём."
+    },
+    {
+      "group": 2,
+      "title": "Подводные камни",
+      "q": "Верно или нет?\n\n1. «`watch` срабатывает при монтировании».\n2. «`watchEffect` отследит значения, прочитанные после `await`».\n3. «`onMounted` можно зарегистрировать после `await` в setup».\n4. «В composable можно передать `props.id`».",
+      "a": "1. Нет — нужен `immediate: true` или `watchEffect`.\n2. Нет — только прочитанное синхронно до первого `await`.\n3. Нет — компонент уже не «текущий», хук молча не привяжется.\n4. Уйдёт число, а не источник — передавай геттер или `toRef(props, 'id')`.\n\nИ замена `reactive` целиком рвёт связь с шаблоном."
+    },
+    {
+      "group": 3,
+      "title": "Коротко (что сказать вслух)",
+      "q": "Интервьюер: «Как устроена Pinia и чем она отличается от Vuex?» Ответь коротко.",
+      "a": "Официальный стор Vue 3. `defineStore(id, …)`: **state** — данные, **getters** — вычисляемые (те же `computed`), **actions** — методы, в том числе async.\n\nМутаций, как во Vuex, **нет**: состояние меняют напрямую или в action, Proxy отследит. Стор создаётся лениво при первом `useXStore()`, типы выводятся сами, история видна в Vue DevTools."
+    },
+    {
+      "group": 3,
+      "title": "Два синтаксиса стора",
+      "q": "Чем option store отличается от setup store в Pinia? Как в setup store выглядят state, getter и action?",
+      "a": "Option store — объект с `state`, `getters`, `actions` (похоже на Options API).\n\nSetup store — функция на Composition API:\n\n```ts\nexport const useCartStore = defineStore('cart', () => {\n  const items = ref<Item[]>([])                                  // state\n  const total = computed(() => items.value.reduce((s, i) => s + i.price, 0)) // getter\n  function add(item: Item) { items.value.push(item) }          // action\n  return { items, total, add }\n})\n```\n\nSetup гибче (composables, `watch`), но наружу видно только то, что **вернули**."
+    },
+    {
+      "group": 3,
+      "title": "Как читать стор в компоненте",
+      "q": "Будут ли обновляться `items` в компоненте? Как правильно?\n\n```ts\nconst cart = useCartStore()\nconst { items, total, add } = cart\n```",
+      "a": "Нет: стор — `reactive`, деструктуризация даёт **снимок** значения.\n\n```ts\nconst { items, total } = storeToRefs(cart) // state и getters\nconst { add } = cart                       // actions — обычной деструктуризацией\n```\n\nБез деструктуризации `cart.items` в шаблоне тоже реактивны."
+    },
+    {
+      "group": 3,
+      "title": "Как менять состояние",
+      "q": "Какими способами можно изменить состояние Pinia? Работает ли `$reset()` в setup store? Как подписаться на изменения?",
+      "a": "| Способ | Когда |\n| --- | --- |\n| напрямую `cart.items.push(item)` | точечно |\n| `$patch({ … })` | несколько полей одной записью в DevTools |\n| `$patch((s) => …)` | массивы и вложенные структуры |\n| action `cart.add(item)` | логика, запрос, несколько шагов |\n| `$reset()` | вернуть начальное состояние |\n\n`$reset()` из коробки — **только в option store** (там есть функция `state`); в setup пишут сами. `$subscribe(cb)` — изменения state (например, в localStorage), `$onAction(cb)` — вызовы actions."
+    },
+    {
+      "group": 3,
+      "title": "Pinia рядом с Redux Toolkit и Zustand",
+      "q": "Сравни Pinia с Redux Toolkit и Zustand: как меняется состояние, нужна ли иммутабельность, как компонент подписывается?",
+      "a": "| | Redux Toolkit | Zustand | Pinia |\n| --- | --- | --- | --- |\n| изменение | `dispatch`, редьюсер | `set(…)` | мутация или action |\n| иммутабельность | нужна (Immer) | нужна | **не нужна** — Proxy |\n| производные | `createSelector` | селекторы | getters с кэшем |\n| async | thunk, RTK Query | функции | async-actions |\n| подписка | `useSelector` | хук с селектором | **автоматически по чтениям** |\n\nГлавное вслух: в Pinia не выбирают, на что подписаться — компонент перерисуется ровно от прочитанных полей."
+    },
+    {
+      "group": 3,
+      "title": "Что класть в стор, а что нет",
+      "q": "Что стоит класть в стор, а что нет? Какой признак лишнего поля?",
+      "a": "| В стор | Не в стор |\n| --- | --- |\n| пользователь, сессия, права | открыт ли дропдаун |\n| корзина, избранное | текст поля до отправки |\n| настройки, язык | то, что нужно одному компоненту |\n| данные нескольких страниц | производные — в getters |\n\nСтор — общая память, а не замена локальному состоянию. Признак лишнего — поле читает и пишет **один-единственный компонент**."
+    },
+    {
+      "group": 3,
+      "title": "Pinia и серверный рендеринг",
+      "q": "Как Pinia работает с SSR в Nuxt? Почему экземпляр создаётся на каждый запрос? Где можно вызывать `useCartStore()`?",
+      "a": "- Подключают модулем **`@pinia/nuxt`**: экземпляр на каждый запрос и перенос состояния с сервера на клиент.\n- Сервер один на всех — состояние в переменной модуля **утекло бы** между посетителями.\n- State сериализуется в HTML и восстанавливается при гидратации — класть только сериализуемое.\n- `useCartStore()` — внутри `setup`, action или middleware; на верхнем уровне модуля — ошибка про отсутствие активной Pinia."
+    },
+    {
+      "group": 3,
+      "title": "Подводные камни",
+      "q": "Верно или нет?\n\n1. «Можно вызвать `useStore()` на верхнем уровне файла».\n2. «В state стоит дублировать значения, вычисляемые из других полей».\n3. «Два стора могут читать друг друга прямо при создании».",
+      "a": "1. Нет — до `app.use(pinia)` активной Pinia нет.\n2. Нет — для этого getters.\n3. Нет — бесконечный цикл; к соседу обращаются внутри action или getter.\n\nИ деструктуризация без `storeToRefs` перестаёт обновляться."
+    },
+    {
+      "group": 4,
+      "title": "Коротко (что сказать вслух)",
+      "q": "Как работает `v-model` на нативном поле и на своём компоненте? Как отправлять форму и где валидировать?",
+      "a": "`v-model` — сахар над «привязать значение и слушать событие»: для текста `value` + `input`, для чекбокса `checked` + `change`. На компоненте — проп **`modelValue`** и событие **`update:modelValue`**, с 3.4 — макрос `defineModel`.\n\nФорму — `@submit.prevent`. Простую валидацию — руками на `computed`, сложную — VeeValidate со схемой Zod/Yup или Vuelidate. Клиентская проверка — удобство, **сервер проверяет заново**."
+    },
+    {
+      "group": 4,
+      "title": "v-model на нативных элементах",
+      "q": "Что связывает `v-model` у текстового поля, чекбокса, радиокнопки и `select`? Что делают модификаторы `.lazy`, `.number`, `.trim`?",
+      "a": "| Элемент | Связь | Событие |\n| --- | --- | --- |\n| text, textarea | `value` | `input` |\n| checkbox | `checked` — boolean или массив | `change` |\n| radio | значение выбранной | `change` |\n| select | `value`, с `multiple` — массив | `change` |\n\n- `.lazy` — обновлять по `change`, а не на каждый символ;\n- `.number` — приводить к числу;\n- `.trim` — обрезать пробелы."
+    },
+    {
+      "group": 4,
+      "title": "Во что разворачивается v-model",
+      "q": "Во что разворачивается `v-model` на `<input>` и на компоненте `<SearchField>`? Как сделать несколько `v-model` на одном компоненте?",
+      "a": "```vue\n<input :value=\"text\" @input=\"text = $event.target.value\" />\n<SearchField :model-value=\"query\" @update:model-value=\"query = $event\" />\n```\n\nИменованные связи: `v-model:title=\"title\"` — проп `title` и событие `update:title`.\n\nВ React то же пишут руками (`value` + `onChange`) — `v-model` лишь готовая запись управляемого поля."
+    },
+    {
+      "group": 4,
+      "title": "v-model на своём компоненте",
+      "q": "Как поддержать `v-model` в своём компоненте `SearchField` во Vue 3.4+ и как это писали до 3.4?",
+      "a": "```vue\n<script setup lang=\"ts\">\nconst model = defineModel<string>({ default: '' })\n</script>\n<template><input v-model=\"model\" type=\"search\" /></template>\n```\n\n`defineModel` возвращает `ref`: чтение — из пропа, запись — событие `update:modelValue`.\n\nДо 3.4: `defineProps<{ modelValue: string }>()` + `defineEmits` и в шаблоне `:value` + `@input=\"emit('update:modelValue', …)\"`. Менять проп напрямую нельзя — данными владеет родитель."
+    },
+    {
+      "group": 4,
+      "title": "Валидация вручную",
+      "q": "Как написать валидацию формы входа вручную? Почему ошибки — `computed`, а не отдельное состояние? Зачем `touched`?",
+      "a": "```ts\nconst form = reactive({ email: '', password: '' })\nconst touched = reactive({ email: false, password: false })\nconst errors = computed(() => ({\n  email: /^\\S+@\\S+\\.\\S+$/.test(form.email) ? '' : 'Введите почту',\n  password: form.password.length >= 8 ? '' : 'Минимум 8 символов',\n}))\nconst valid = computed(() => Object.values(errors.value).every((e) => !e))\n```\n\nОшибки — **производные** от значений, их не хранят отдельно. `touched` — чтобы не ругаться на поле, к которому ещё не прикасались. В шаблоне — `<form novalidate @submit.prevent=\"submit\">` и `v-model.trim`."
+    },
+    {
+      "group": 4,
+      "title": "Библиотеки валидации",
+      "q": "Какие есть инструменты валидации форм во Vue и когда какой брать? Как подключить схему Zod к VeeValidate?",
+      "a": "| Инструмент | Когда |\n| --- | --- |\n| нативные `required`, `pattern`, `type=\"email\"` | простые формы |\n| VeeValidate | большие формы, async-проверки |\n| Vuelidate | правила рядом с моделью данных |\n| Zod, Yup | одна схема для формы и API, типы из схемы |\n\n```ts\nconst schema = toTypedSchema(z.object({ email: z.string().email(), age: z.number().min(18) }))\nconst { handleSubmit, errors, defineField } = useForm({ validationSchema: schema })\nconst [email, emailAttrs] = defineField('email')\n```"
+    },
+    {
+      "group": 4,
+      "title": "Что проверить в любой форме",
+      "q": "Что нужно проверить в любой форме: когда показывать ошибку, ошибки сервера, двойная отправка, доступность, кому верить?",
+      "a": "| Вопрос | Ответ |\n| --- | --- |\n| когда ошибка | после ухода с поля или попытки отправки, не на первый символ |\n| ошибки сервера | по полям тем же механизмом |\n| двойная отправка | блокировать кнопку на время запроса |\n| доступность | `<label>`, `aria-invalid`, текст через `aria-describedby` |\n| подсказки браузера | `novalidate`, если свои |\n| кому верить | серверу — клиентскую проверку обходят одним запросом |"
+    },
+    {
+      "group": 4,
+      "title": "Подводные камни",
+      "q": "Верно или нет?\n\n1. «`v-model.number` на пустом поле даёт `0`».\n2. «`v-model` обновляется на каждый символ при японском вводе».\n3. «Несколько чекбоксов на один массив работают без атрибута `value`».",
+      "a": "1. Нет — пустое поле даёт `''`, а неразбираемый ввод остаётся строкой.\n2. Нет — при IME-композиции значение не обновляется до её конца.\n3. Нет — нужен `value` у каждого, иначе переключаются разом.\n\nИ клиентская валидация — удобство, а не безопасность."
+    },
+    {
+      "group": 5,
+      "title": "Коротко (что сказать вслух)",
+      "q": "Что такое Nuxt и как он рендерит страницы по умолчанию?",
+      "a": "Фреймворк над Vue, как Next над React: **файловая маршрутизация**, **SSR из коробки**, **автоимпорты**, свой сервер на **Nitro**. Многое держится на соглашениях о папках: файл в `pages/` — маршрут, `components/` и `composables/` доступны без импорта.\n\nПо умолчанию рендеринг **универсальный**: первый запрос сервер отдаёт готовым HTML, на клиенте — гидратация, дальше приложение работает как SPA. Режим меняют для всего сайта или отдельных маршрутов."
+    },
+    {
+      "group": 5,
+      "title": "Структура проекта",
+      "q": "Что лежит в папках Nuxt-проекта `pages/`, `components/`, `composables/`, `layouts/`, `middleware/`, `plugins/`, `server/`, `public/`, `assets/` и что Nuxt с ними делает?",
+      "a": "| Папка | Что делает Nuxt |\n| --- | --- |\n| `pages/` | строит маршруты по именам файлов |\n| `components/`, `composables/`, `utils/` | импортирует автоматически |\n| `layouts/` | оборачивает страницу каркасом |\n| `middleware/` | запускает перед переходом |\n| `plugins/` | выполняет при старте |\n| `server/` | поднимает обработчики Nitro (`api/`, `routes/`, `middleware/`) |\n| `public/` | раздаёт как есть от корня |\n| `assets/` | пропускает через сборщик |\n\nСторы — в `stores/`. В Nuxt 4 папки приложения переехали в `app/`, соглашения те же."
+    },
+    {
+      "group": 5,
+      "title": "app.vue, layout и страница",
+      "q": "Как связаны `app.vue`, layout и страница? Как выбрать для страницы не default-layout?",
+      "a": "```vue\n<!-- app.vue -->\n<NuxtLayout><NuxtPage /></NuxtLayout>\n```\n\n- `<NuxtPage />` — место текущей страницы из `pages/`;\n- `<NuxtLayout>` оборачивает её каркасом, по умолчанию `layouts/default.vue`; страница попадает в его `<slot />`;\n- другой layout: `definePageMeta({ layout: 'admin' })`."
+    },
+    {
+      "group": 5,
+      "title": "Автоимпорты",
+      "q": "Что доступно в Nuxt без импорта? Как называется компонент из `components/base/Button.vue`? Какие плюсы и минусы у автоимпортов?",
+      "a": "Без импорта: `ref`, `computed`, `watch`, `onMounted` из Vue; `useFetch`, `useRoute`, `navigateTo`, `useState` из Nuxt; компоненты; функции из `composables/` и `utils/`.\n\n`components/base/Button.vue` → **`<BaseButton>`**.\n\nПлюс — меньше шаблонного кода, в сборку попадает только использованное. Минус — по файлу не видно, откуда функция; спасают типы в `.nuxt/` и переход к определению. Явно — из `#imports`."
+    },
+    {
+      "group": 5,
+      "title": "Режимы рендеринга",
+      "q": "Какие режимы рендеринга есть в Nuxt и когда какой подходит? Как задать разный режим для разных маршрутов?",
+      "a": "| Режим | Как | Когда |\n| --- | --- | --- |\n| SSR | по умолчанию | каталог, карточки, всё для поисковиков |\n| SPA | `ssr: false` | личный кабинет, админка |\n| SSG | `nuxt generate` | документация, лендинги |\n| гибридный | `routeRules` | большой сайт с разными разделами |\n\n```ts\nrouteRules: {\n  '/': { prerender: true },\n  '/catalog/**': { swr: 3600 },\n  '/account/**': { ssr: false },\n}\n```"
+    },
+    {
+      "group": 5,
+      "title": "Гидратация и код, который выполняется дважды",
+      "q": "Какие три правила следуют из того, что код `<script setup>` страницы выполняется и на сервере, и в браузере?",
+      "a": "1. **Браузерных API на сервере нет**: `window`, `document`, `localStorage` — в `onMounted`, под `import.meta.client` или внутри `<ClientOnly>`.\n2. **Разметка должна совпасть**, иначе hydration mismatch: предупреждение и перерисовка куска. Причины — `Date.now()`, `Math.random()`, ветвление по `localStorage` или ширине окна.\n3. **Общее состояние — через `useState` или Pinia.** `ref()` на верхнем уровне модуля один на всех посетителей и утекает; `useState('user', () => null)` создаётся на запрос и переносится на клиент."
+    },
+    {
+      "group": 5,
+      "title": "Серверная часть: server/api",
+      "q": "Как написать серверный обработчик `/api/products/:id` в Nuxt? Что делает `$fetch('/api/products/1')` при SSR? Как работает `runtimeConfig`?",
+      "a": "```ts\n// server/api/products/[id].get.ts\nexport default defineEventHandler(async (event) => {\n  const id = getRouterParam(event, 'id')\n  const product = await db.products.find(id)\n  if (!product) throw createError({ statusCode: 404, statusMessage: 'Товар не найден' })\n  return product\n})\n```\n\nПуть задаёт адрес, `.get` — метод. Код только на сервере — секреты и база здесь.\n\nПри SSR `$fetch` во внутренний `/api` **не делает HTTP-запрос**, а вызывает обработчик напрямую. В `runtimeConfig` верхний уровень видит только сервер, раздел `public` попадает в браузер."
+    },
+    {
+      "group": 5,
+      "title": "Nuxt рядом с Next",
+      "q": "Сопоставь Next.js и Nuxt 3: маршруты, динамический сегмент, каркас, ссылки, данные страницы, серверные обработчики, переменные окружения.",
+      "a": "| Задача | Next.js | Nuxt 3 |\n| --- | --- | --- |\n| маршруты | `app/` или `pages/` | `pages/` |\n| сегмент | `[id]` | `[id]` |\n| каркас | `layout.tsx` | `layouts/`, `<NuxtLayout>` |\n| ссылка | `<Link>` | `<NuxtLink>` |\n| данные | серверные компоненты, `fetch` | `useFetch`, `useAsyncData` |\n| обработчики | Route Handlers | `server/api/` |\n| middleware | `middleware.ts` | `middleware/`, `server/middleware/` |\n| env | `NEXT_PUBLIC_` | `runtimeConfig.public` |"
+    },
+    {
+      "group": 5,
+      "title": "Подводные камни",
+      "q": "Верно или нет?\n\n1. «Секрет можно положить в `runtimeConfig.public`».\n2. «`middleware/` и `server/middleware/` — одно и то же».\n3. «Данные для первой отрисовки удобно загрузить в `onMounted`».",
+      "a": "1. Нет — `public` уезжает в браузер.\n2. Нет — первое перед переходом по маршруту, второе на каждый запрос к серверу.\n3. Нет — на сервере `onMounted` не вызывается, в HTML данных не будет.\n\nИ состояние в переменной модуля на сервере общее для всех посетителей."
+    },
+    {
+      "group": 6,
+      "title": "Коротко (что сказать вслух)",
+      "q": "Как в Nuxt устроены маршруты: динамический сегмент, хвост пути, необязательный сегмент, вложенные маршруты, переходы и проверки?",
+      "a": "Из файлов `pages/`, под капотом Vue Router.\n- `[id].vue` → `/products/:id`, параметр — `useRoute().params.id`;\n- `[...slug].vue` — хвост любой длины;\n- `[[lang]]` — необязательный сегмент;\n- вложенные — файл-родитель с `<NuxtPage />` + одноимённая папка с детьми;\n- переходы — `<NuxtLink>` и `navigateTo()`, проверки — route middleware."
+    },
+    {
+      "group": 6,
+      "title": "Файл → маршрут",
+      "q": "Что будет в `route.params` для каждого файла и адреса? Какое имя у маршрута `pages/products/[id].vue`?\n\n```text\npages/products/[id].vue      /products/42\npages/users-[group]/[id].vue /users-admins/7\npages/[...slug].vue          /a/b/c\npages/[[lang]]/index.vue     /en\n```",
+      "a": "- `{ id: '42' }`\n- `{ group: 'admins', id: '7' }`\n- `{ slug: ['a', 'b', 'c'] }` — массив\n- `{ lang: 'en' }` (на `/` — `''`)\n\nИмя складывается из пути: **`products-id`**."
+    },
+    {
+      "group": 6,
+      "title": "Чтение параметров",
+      "q": "Как правильно читать параметры маршрута в Nuxt-странице? Как отдать 404, если `id` не число, ещё до рендера?",
+      "a": "```ts\nconst route = useRoute()\nconst id = computed(() => Number(route.params.id)) // параметры — всегда строки\nconst page = computed(() => Number(route.query.page ?? 1))\n```\n\n`route` реактивный — значение берут через `computed` или геттер, а не копируют.\n\n```ts\ndefinePageMeta({\n  validate: (route) => /^\\d+$/.test(String(route.params.id)), // false → 404\n})\n```"
+    },
+    {
+      "group": 6,
+      "title": "Что происходит при смене параметра",
+      "q": "Что происходит при переходе с `/products/1` на `/products/2` в чистом Vue Router и в Nuxt? Как загружать данные, чтобы работало в обоих случаях?",
+      "a": "- **Vue Router**: компонент переиспользуется, `setup` и `onMounted` не повторяются — за параметром следят `watch(() => route.params.id, …)`.\n- **Nuxt**: ключ страницы включает параметры — страница создаётся заново. Меняется через `definePageMeta({ key: (route) => route.fullPath })`.\n\nНадёжно в обоих — реактивная загрузка:\n\n```ts\nconst { data: product } = await useFetch(() => `/api/products/${route.params.id}`)\n```"
+    },
+    {
+      "group": 6,
+      "title": "Навигация: NuxtLink и navigateTo",
+      "q": "Чем `<NuxtLink>` лучше `<a href>`? Как перейти программно с заменой истории? Что делает `navigateTo` при серверном рендере?",
+      "a": "`<NuxtLink>` переключает страницу **без перезагрузки** и заранее подгружает её код, когда ссылка попадает в область видимости. `<a href>` на внутренний адрес перезагрузит приложение и сбросит состояние.\n\n```ts\nawait navigateTo({ path: '/search', query: { q: text.value } })\nawait navigateTo('/cart', { replace: true })\nawait navigateTo('https://example.com', { external: true })\n```\n\nВо время SSR `navigateTo` превращается в **HTTP-редирект**."
+    },
+    {
+      "group": 6,
+      "title": "Вложенные маршруты",
+      "q": "Как сделать раздел `/account` с общими вкладками и дочерними страницами? Что будет, если забыть `<NuxtPage />` в родителе?",
+      "a": "```text\npages/account.vue        ← родитель: <AccountTabs /> + <NuxtPage />\npages/account/index.vue  → /account\npages/account/orders.vue → /account/orders\n```\n\nФайл и папка с одним именем — пара «родитель — дети». Дочерняя страница рисуется на месте `<NuxtPage />`, при переходах между детьми родитель не пересоздаётся.\n\nЗабыть `<NuxtPage />` — дочерние страницы **не появятся вовсе**."
+    },
+    {
+      "group": 6,
+      "title": "Route middleware",
+      "q": "Напиши route middleware, который не пускает неавторизованного пользователя и запоминает, куда он шёл. Что можно вернуть из middleware? Где он выполняется при первом заходе?",
+      "a": "```ts\n// middleware/auth.ts\nexport default defineNuxtRouteMiddleware((to) => {\n  const user = useState('user')\n  if (!user.value) return navigateTo({ path: '/login', query: { back: to.fullPath } })\n})\ndefinePageMeta({ middleware: 'auth' })\n```\n\nНичего — переход продолжается; `navigateTo` — редирект; `abortNavigation()` — отмена. Суффикс `.global.ts` — перед каждым переходом.\n\nПри первом заходе — **на сервере и ещё раз на клиенте** при гидратации. `server/middleware/` — другое: на каждый запрос к серверу."
+    },
+    {
+      "group": 6,
+      "title": "Страница ошибки и 404",
+      "q": "Как показать 404, если товар не найден? Зачем `fatal: true`? Как сбросить ошибку и как поймать несуществующий адрес?",
+      "a": "```ts\nif (!product.value) {\n  throw createError({ statusCode: 404, statusMessage: 'Товар не найден', fatal: true })\n}\n```\n\n- `error.vue` в корне — страница фатальных ошибок, объект приходит пропом `error`;\n- `fatal: true` — чтобы ошибка, брошенная **на клиенте**, тоже показала полноэкранную страницу;\n- `clearError({ redirect: '/' })` — сбросить и увести;\n- несуществующий адрес — встроенная 404 или свой `pages/[...slug].vue`."
+    },
+    {
+      "group": 6,
+      "title": "Подводные камни",
+      "q": "Верно или нет?\n\n1. «`route.params.id === 42` для `/products/42`».\n2. «У catch-all сегмента значение — строка».\n3. «В `definePageMeta` можно ссылаться на переменные компонента».\n4. «`const id = route.params.id` обновится при смене маршрута».",
+      "a": "1. Нет — параметры строки, сравнение всегда ложно.\n2. Нет — массив.\n3. Нет — это макрос компилятора.\n4. Нет — копия не обновится; нужен `computed` или геттер."
+    },
+    {
+      "group": 7,
+      "title": "Коротко (что сказать вслух)",
+      "q": "Чем различаются `$fetch`, `useFetch` и `useAsyncData` в Nuxt 3? Что такое «asyncData» из списков тем к интервью?",
+      "a": "- **`$fetch`** — обёртка над fetch: разбирает JSON и бросает на 4xx/5xx; для действий по событию.\n- **`useFetch(url)`** и **`useAsyncData(key, fn)`** — для данных отрисовки: запрос на сервере, результат кладётся в HTML и при гидратации повторно не запрашивается. `useFetch` = `useAsyncData` + `$fetch`.\n\n«asyncData» — метод компонента в **Nuxt 2**; в Nuxt 3 его место заняли эти composables."
+    },
+    {
+      "group": 7,
+      "title": "Три инструмента",
+      "q": "Сравни `$fetch`, `useFetch` и `useAsyncData`: где вызывать, переносят ли результат с сервера, что возвращают, когда применять?",
+      "a": "| | `$fetch` | `useFetch` | `useAsyncData` |\n| --- | --- | --- | --- |\n| где | где угодно | в `setup` | в `setup` |\n| перенос с сервера | нет | да | да |\n| возвращает | промис с данными | `data`, `status`, `error`, `refresh` | то же |\n| когда | форма, клик | один запрос по адресу | своя логика, несколько запросов, SDK |"
+    },
+    {
+      "group": 7,
+      "title": "Почему в setup нельзя просто вызвать $fetch",
+      "q": "Сколько раз уйдёт запрос при SSR-загрузке страницы и почему? Как `useFetch` это решает?\n\n```ts\nconst products = await $fetch('/api/products')\n```",
+      "a": "**Дважды**: сервер выполняет `setup` и делает запрос, потом браузер при гидратации выполняет `setup` снова, а результат первого запроса нигде не сохранён.\n\n`useFetch`/`useAsyncData` кладут ответ в **payload** внутри HTML. На клиенте composable сначала смотрит туда и, найдя данные по ключу, в сеть не идёт. Заодно нет расхождения разметки."
+    },
+    {
+      "group": 7,
+      "title": "useFetch: что возвращает и что принимает",
+      "q": "Что возвращает `useFetch` и какие опции чаще всего передают? Как сделать, чтобы запрос повторялся при смене страницы `page`?",
+      "a": "```ts\nconst page = ref(1)\nconst { data, status, error, refresh } = await useFetch('/api/products', {\n  query: { page },               // ref: изменится — запрос повторится\n  transform: (res) => res.items,\n  default: () => [],\n})\n```\n\n- `data` — ref с ответом; `status` — `'idle'`/`'pending'`/`'success'`/`'error'`; `error`; `refresh()`.\n- Опции: `method`, `body`, `headers`, `query`, `key`, `lazy`, `server`, `immediate`, `watch`, `pick`. Ключ `useFetch` выводит сам."
+    },
+    {
+      "group": 7,
+      "title": "useAsyncData: когда нужен именно он",
+      "q": "Когда нужен именно `useAsyncData`, а не `useFetch`? Зачем ему ключ и чем опасен одинаковый ключ?",
+      "a": "| Ситуация | Что брать |\n| --- | --- |\n| один запрос по адресу | `useFetch` |\n| несколько запросов вместе (`Promise.all`) | `useAsyncData` |\n| SDK, GraphQL-клиент, не `$fetch` | `useAsyncData` |\n| свой ключ, чтобы читать данные в другом компоненте | `useAsyncData` |\n\nПо ключу данные находятся в payload: `` `product-${route.params.id}` ``. Одинаковый ключ в двух местах — **одни данные на двоих**: и возможность, и источник путаницы."
+    },
+    {
+      "group": 7,
+      "title": "Реактивные параметры и повторный запрос",
+      "q": "Повторится ли запрос при смене `id`? Какими способами сделать параметры реактивными?\n\n```ts\nuseFetch(`/api/products/${id.value}`)\n```",
+      "a": "**Нет** — строка собрана один раз, в `useFetch` ушла готовая строка.\n\n| Способ | Пример |\n| --- | --- |\n| адрес-геттер | `useFetch(() => '/api/products/' + id.value)` |\n| ref в `query` | `{ query: { page } }` |\n| `watch` | `useAsyncData(key, fn, { watch: [id] })` |\n| вручную | `refresh()` |\n| отложенный старт | `{ immediate: false }` и `execute()` |"
+    },
+    {
+      "group": 7,
+      "title": "lazy: блокировать навигацию или нет",
+      "q": "Чем `await useFetch(…)` отличается от `useLazyFetch` / `lazy: true` при переходе на клиенте? Что делает `server: false`?",
+      "a": "| | `await useFetch` | `lazy` |\n| --- | --- | --- |\n| переход | ждёт ответа | страница открывается сразу |\n| что видно | старая страница до загрузки | новая с состоянием загрузки |\n| в шаблоне | — | ветка `status === 'pending'` |\n\n```vue\n<p v-if=\"status === 'pending'\">Загружаем…</p>\n<p v-else-if=\"error\">Не получилось: {{ error.message }}</p>\n<ProductList v-else :items=\"data\" />\n```\n\n`server: false` — запрос только в браузере после гидратации: для того, что не нужно поисковикам и зависит от браузера."
+    },
+    {
+      "group": 7,
+      "title": "$fetch в обработчике: отправка формы",
+      "q": "Напиши отправку формы заказа через `$fetch` с обработкой ошибки и обновлением списка. Чем `$fetch` удобнее нативного `fetch`? Можно ли вызвать `useFetch` в обработчике клика?",
+      "a": "```ts\nasync function submit() {\n  pending.value = true\n  formError.value = ''\n  try {\n    await $fetch('/api/orders', { method: 'POST', body: form })\n    await refreshNuxtData('orders')\n  } catch (e) {\n    formError.value = e.data?.message ?? 'Не удалось оформить заказ'\n  } finally {\n    pending.value = false\n  }\n}\n```\n\n`$fetch` сам ставит `Content-Type`, сериализует `body` и **бросает на 4xx/5xx** (в ошибке `statusCode` и `data`) — проверять `response.ok` не нужно.\n\n`useFetch` в обработчике **нельзя** — это composable для `setup`."
+    },
+    {
+      "group": 7,
+      "title": "То же самое в мире React",
+      "q": "Сопоставь загрузку данных в React и Nuxt 3. Заменяет ли `useAsyncData` TanStack Query?",
+      "a": "| Задача | React | Nuxt 3 |\n| --- | --- | --- |\n| данные страницы | серверный компонент, `getServerSideProps` | `await useFetch` |\n| на клиенте с загрузкой | TanStack Query, `useEffect` + `fetch` | `useLazyFetch`, `server: false` |\n| ключ | `queryKey` | `key` |\n| повторить | `refetch`, `invalidateQueries` | `refresh`, `refreshNuxtData` |\n| изменение | `useMutation` | `$fetch` в обработчике |\n\n**Не полностью**: перенос с сервера и дедупликация по ключу есть, а обновления по фокусу окна и учёта устаревания нет."
+    },
+    {
+      "group": 7,
+      "title": "Подводные камни",
+      "q": "Верно или нет?\n\n1. «`data` из `useFetch` сразу содержит данные».\n2. «Голый `$fetch` при SSR пробрасывает куки посетителя на сторонний адрес».\n3. «Экземпляр класса из payload приедет на клиент с методами».",
+      "a": "1. Нет — это `ref`, до загрузки пуст; в шаблоне ветка «ещё нет данных», в скрипте `data.value?.items`.\n2. Нет — `useFetch` пробрасывает куки только во внутренние `/api`; иначе берут `useRequestHeaders(['cookie'])`.\n3. Нет — в payload только сериализуемое, методы потеряются."
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { areasOf } from '../../shared/topics.js'
 import { api } from '../api'
 import { Markdown } from '../components/Markdown'
 import { CardEditor } from '../components/CardEditor'
@@ -176,14 +177,16 @@ export function Notes({ data }: { data: AppData }) {
   /** Номер карточки, открытой в редакторе. null — ни одной. */
   const [editing, setEditing] = useState<number | null>(null)
   /**
-   * Раскрытые разделы. Полностью прочитанные сворачиваем, чтобы не пролистывать
-   * их каждый раз заново. Состояние считается ОДИН РАЗ при открытии файла:
+   * Раскрытые разделы. Открыт только тот, что читаем сейчас: иначе один файл —
+   * это десятки тысяч пикселей. Состояние считается ОДИН РАЗ при открытии файла:
    * иначе раздел схлопывался бы прямо под руками, стоит отметить в нём последнюю
    * карточку.
    */
   const [openGroups, setOpenGroups] = useState<Set<number>>(new Set())
   /** Файл, для которого уже посчитали свёрнутость и прыгнули к месту чтения. */
   const settledFor = useRef<string | null>(null)
+  /** Список файлов на телефоне: свёрнут, иначе текст начинается только на втором экране. */
+  const [filesOpen, setFilesOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [hits, setHits] = useState<{ rel: string; title: string; line: number; excerpt: string }[]>([])
   const [reading, setReading] = useState<ReadingState | null>(null)
@@ -247,6 +250,7 @@ export function Notes({ data }: { data: AppData }) {
   /** Открыть файл из списка. Адрес обновляем, чтобы перезагрузка вернула сюда же. */
   const openFile = (rel: string) => {
     setActive(rel)
+    setFilesOpen(false)
     setParams({ file: rel }, { replace: true })
   }
 
@@ -324,8 +328,16 @@ export function Notes({ data }: { data: AppData }) {
     [active, reading],
   )
 
-  const toggleRead = async (card: { index: number; title: string }) => {
+  const toggleRead = async (card: NoteCard) => {
     if (!active) return
+    // Дочитан последний в разделе — раскрываем следующий, туда и поедет страница
+    if (note && !isRead(card.index)) {
+      const rest = note.cards.filter((c) => c.group === card.group && c.index !== card.index)
+      const next = note.groups[note.groups.findIndex((g) => g.group === card.group) + 1]
+      if (next && rest.every((c) => isRead(c.index))) {
+        setOpenGroups((prev) => new Set(prev).add(next.group))
+      }
+    }
     try {
       const res = await api.toggleRead(active, card.index, card.title)
       if (res.reward) data.celebrate(res.reward)
@@ -343,7 +355,7 @@ export function Notes({ data }: { data: AppData }) {
   }
 
   /**
-   * При открытии файла: свернуть полностью прочитанные разделы и поставить
+   * При открытии файла: раскрыть первый недочитанный раздел и поставить
    * страницу на первую непрочитанную карточку. Возврат к конспекту должен
    * продолжать чтение, а не начинать его сначала.
    */
@@ -357,10 +369,8 @@ export function Notes({ data }: { data: AppData }) {
 
     const read = (i: number) => !!reading.marks[`${active}#${i}`]
     const open = new Set<number>()
-    for (const g of note.groups) {
-      const cards = note.cards.filter((c) => c.group === g.group)
-      if (!cards.every((c) => read(c.index))) open.add(g.group)
-    }
+    const current = note.groups.find((g) => note.cards.some((c) => c.group === g.group && !read(c.index)))
+    if (current) open.add(current.group)
     // Раздел, на который пришли по ссылке, раскрываем, даже если он прочитан.
     const target = active === wantedFile && wantedGroup !== null && note.groups.some((g) => g.group === wantedGroup)
       ? wantedGroup
@@ -428,32 +438,13 @@ export function Notes({ data }: { data: AppData }) {
     return [...map.entries()]
   }, [files])
 
-  const topics = useMemo(
-    () => [...new Map(data.cards.map((c) => [c.topic, c.topicTitle])).entries()],
-    [data.cards],
-  )
+  const topics = useMemo(() => areasOf(data.cards), [data.cards])
 
-  /**
-   * Общая шкала. В фокусе на программе конспекты вне её не считаются — так же,
-   * как в бейдже сайдбара, иначе две цифры про одно и то же разошлись бы.
-   */
   const focus = !!data.program?.focus
   const outOfPlan = useCallback(
     (rel: string) => focus && data.program?.fileScope[rel] === 'out',
     [focus, data.program],
   )
-  const scale = useMemo(() => {
-    if (!reading) return null
-    const list = reading.coverage.filter((c) => !outOfPlan(c.rel))
-    const sum = (pick: (c: ReadingCoverage) => number) => list.reduce((s, c) => s + pick(c), 0)
-    return {
-      charsRead: sum((c) => c.charsRead),
-      charsTotal: sum((c) => c.charsTotal),
-      read: sum((c) => c.read),
-      total: sum((c) => c.total),
-      filesDone: list.filter((c) => c.total > 0 && c.read >= c.total).length,
-    }
-  }, [reading, outOfPlan])
 
   if (files === null) return <div className="subtitle">Читаю папку…</div>
 
@@ -486,29 +477,17 @@ export function Notes({ data }: { data: AppData }) {
         {bundled ? 'встроены в приложение' : <code>{data.config.notesDir}</code>}
       </p>
 
-      {/*
-        Шкала по всем конспектам сразу, в знаках. По числу карточек считать
-        нельзя: они различаются в десятки раз, и доля карточек не равна доле
-        пройденного текста.
-      */}
-      {scale && scale.charsTotal > 0 && (
-        <div className="notes-scale">
-          <div className="notes-scale-head">
-            <b>Пройдено {Math.round((scale.charsRead / scale.charsTotal) * 100)}%</b>
-            <span className="hint">
-              {kchars(scale.charsRead)} из {kchars(scale.charsTotal)} знаков · {scale.read} из {scale.total} разделов
-              {scale.filesDone > 0 && ` · файлов целиком: ${scale.filesDone}`}
-              {focus && ' · без конспектов вне программы'}
-            </span>
-          </div>
-          <div className="progress-track">
-            <i style={{ width: `${(scale.charsRead / scale.charsTotal) * 100}%` }} />
-          </div>
-        </div>
-      )}
+      <button
+        className="btn notes-list-toggle"
+        aria-expanded={filesOpen}
+        onClick={() => setFilesOpen((value) => !value)}
+      >
+        <span className="truncate">{files.find((f) => f.rel === active)?.title ?? 'Файлы'}</span>
+        <span>{filesOpen ? 'Скрыть' : 'Файлы'}</span>
+      </button>
 
       <div className="notes-layout">
-        <div className="notes-list">
+        <div className={`notes-list ${filesOpen ? 'open' : ''}`}>
           <div style={{ padding: 10, borderBottom: '1px solid var(--border)' }}>
             <input
               type="text"
@@ -572,7 +551,7 @@ export function Notes({ data }: { data: AppData }) {
 
         <div>
           {!note ? (
-            <div className="subtitle">Выбери файл слева</div>
+            <div className="subtitle">Открываю конспект…</div>
           ) : (
             <>
               {note.intro?.lead && (
@@ -635,7 +614,7 @@ export function Notes({ data }: { data: AppData }) {
                       g.cardIds.length > 0 && (
                         <div className="group-foot">
                           <button className="btn" onClick={() => setChecking(g.group)}>
-                            Проверить себя по разделу · {g.cardIds.length}
+                            Самопроверка по разделу · {g.cardIds.length}
                           </button>
                           <span className="hint">
                             Вспомнить прочитанное — единственный способ узнать, осело ли
@@ -721,6 +700,7 @@ function ReadCard({
    * иначе их порядок менялся бы при входе в режим правки.
    */
   const [burst, setBurst] = useState(false)
+  const [more, setMore] = useState(false)
   const article = useRef<HTMLElement>(null)
   useEffect(() => {
     if (!burst) return
@@ -818,15 +798,23 @@ function ReadCard({
                   : 'Вопрос по карточке, ответ — по кнопке'
             }
           >
-            {checkResult === true ? '✓ ' : checkResult === false ? '↻ ' : ''}проверить себя
+            {checkResult === true ? '✓ ' : checkResult === false ? '↻ ' : ''}самопроверка
           </button>
         )}
-        <button className="btn ghost sm" onClick={onEdit}>
-          править
-        </button>
-        <button className="btn ghost sm" onClick={onDraft}>
-          в карточку
-        </button>
+        {more ? (
+          <>
+            <button className="btn ghost sm" onClick={onEdit}>
+              править
+            </button>
+            <button className="btn ghost sm" onClick={onDraft}>
+              в карточку
+            </button>
+          </>
+        ) : (
+          <button className="btn ghost sm" aria-label="Ещё действия" title="Ещё действия" onClick={() => setMore(true)}>
+            ⋯
+          </button>
+        )}
       </div>
     </article>
   )

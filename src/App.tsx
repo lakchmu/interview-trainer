@@ -3,9 +3,9 @@ import { NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { api } from './api'
 import type { Card, Config, Decor, GameResponse, Program as ProgramData, Reward, Stats } from './types'
 import { Sky } from './components/Sky'
-import { SkyPicker } from './components/SkyPicker'
+import { SectionTabs } from './components/SectionTabs'
 import { applyTheme, loadSettings, resolve, saveSettings } from './theme'
-import type { Phase, SkySettings, Weather } from './theme'
+import type { Phase, Resolved, SkySettings, Weather } from './theme'
 import { Dashboard } from './pages/Dashboard'
 import { Program } from './pages/Program'
 import { Interview } from './pages/Interview'
@@ -26,23 +26,15 @@ export interface AppData {
   config: Config
   reload: () => Promise<void>
   toast: (message: string) => void
-  /** Показать награду за действие: опыт, уровень, достижения. */
+  /** Показать награду за действие: ману, закрытый день, достижения. */
   celebrate: (reward: Reward | undefined) => void
   game: GameResponse | null
   /** Программа подготовки под компанию: список тем и готовность по каждой. */
   program: ProgramData | null
   /** Текущая сцена — чтобы страницы могли показать её врезкой. */
   scene: { phase: Phase; weather: Weather; hour: number; scenery: boolean; decor: Decor; trail: number }
-}
-
-/**
- * Доля прочитанного текста. В фокусе на программе конспекты вне её в расчёт не
- * идут: иначе два больших файла про React навсегда держали бы шкалу внизу.
- */
-function readPercent(g: GameResponse, program: ProgramData | null) {
-  const files = program?.focus ? g.reading.files.filter((f) => program.fileScope[f.rel] !== 'out') : g.reading.files
-  const total = files.reduce((s, f) => s + f.charsTotal, 0)
-  return total ? (files.reduce((s, f) => s + f.charsRead, 0) / total) * 100 : 0
+  /** Настройки неба: сам выбор живёт на странице настроек. */
+  sky: { settings: SkySettings; resolved: Resolved; change: (next: SkySettings) => void }
 }
 
 /** «<1%» вместо «0%»: округлять начатое чтение в ноль — неправда и уныние. */
@@ -163,9 +155,32 @@ export function App({ banner, onNavigate }: { banner?: ReactNode; onNavigate?: (
   // Доля разведанного конспекта — она же длина тропы на хребте.
   const trail = game && game.reading.total > 0 ? game.reading.read / game.reading.total : 0
   const scene = { ...resolved, scenery: sky.scenery, decor, trail }
-  const data: AppData = { cards, config, reload, toast, celebrate, game, program, scene }
-  const read = game ? readPercent(game, program) : 0
+  const data: AppData = {
+    cards,
+    config,
+    reload,
+    toast,
+    celebrate,
+    game,
+    program,
+    scene,
+    sky: { settings: sky, resolved, change: changeSky },
+  }
   const asked = cards.filter((c) => c.asked).length
+
+  const overviewPath = program ? '/overview' : '/'
+  const progressTabs = [
+    { to: overviewPath, title: 'Обзор' },
+    { to: '/ascent', title: 'Восхождение' },
+    { to: '/shop', title: 'Магазин' },
+  ]
+  const checkTabs = [
+    { to: '/quiz', title: 'Мини-тесты' },
+    { to: '/interview', title: 'Вопросы ревьюера' },
+  ]
+  const inTabs = (tabs: { to: string }[]) => tabs.some((t) => t.to === location.pathname)
+  const inProgress = inTabs(progressTabs)
+  const inCheck = inTabs(checkTabs)
 
   return (
     <div className="app">
@@ -207,61 +222,40 @@ export function App({ banner, onNavigate }: { banner?: ReactNode; onNavigate?: (
           {/*
             Порядок — по тому, сколько времени страница реально забирает.
             Сверху ежедневная работа, ниже — то, куда заходят посмотреть, в самом
-            низу редкое. Обзор ушёл из первой строки не потому, что не нужен: он
-            и так открывается при запуске, а переходят на него редко.
+            низу редкое. Счётчики только там, где они подсказывают следующий шаг:
+            готовность, очередь и мана.
           */}
           <NavLink to="/notes" className={`nav-link ${program ? 'group-start' : ''}`}>
             <NavIcon name="notes" />
             <span>Конспекты</span>
-            {game && game.reading.charsTotal > 0 && (
-              <span className={`pill ${read >= 100 ? 'notes' : 'ghost'}`}>
-                {/* Доля прочитанного текста, а не карточек: карточки различаются
-                    в десятки раз, и их доля не равна доле пройденного материала */}
-                {label(read)}
-              </span>
-            )}
           </NavLink>
           <NavLink to="/review" className="nav-link">
             <NavIcon name="review" />
             <span>Повторение</span>
             {todayCount > 0 && <span className="pill accent">{todayCount}</span>}
           </NavLink>
-          <NavLink to="/quiz" className="nav-link">
+          <NavLink to="/quiz" className={`nav-link ${inCheck ? 'active' : ''}`}>
             <NavIcon name="quiz" />
-            <span>Мини-тесты</span>
+            <span>Проверка</span>
           </NavLink>
           <NavLink to="/code" className="nav-link">
             <NavIcon name="code" />
             <span>Код руками</span>
           </NavLink>
-          {/* Раздел живёт на дословных репликах интервьюеров — без них ему нечего показать */}
-          {asked > 0 && (
-            <NavLink to="/interview" className="nav-link">
-              <NavIcon name="interview" />
-              <span>Вопросы ревьюера</span>
-              <span className="pill ghost">{asked}</span>
-            </NavLink>
-          )}
-
-          <NavLink to={program ? '/overview' : '/'} end className="nav-link group-start">
+          <NavLink to={overviewPath} end className={`nav-link ${inProgress ? 'active' : ''}`}>
             <NavIcon name="dashboard" />
-            <span>Обзор</span>
-          </NavLink>
-          <NavLink to="/ascent" className="nav-link">
-            <NavIcon name="ascent" />
-            <span>Восхождение</span>
-            {game && <span className="pill accent">ур. {game.level.level}</span>}
-          </NavLink>
-          <NavLink to="/shop" className="nav-link">
-            <NavIcon name="shop" />
-            <span>Магазин</span>
-            {game && game.game.mana > 0 && <span className="pill mana">{game.game.mana}</span>}
+            <span>Прогресс</span>
+            {game && (
+              <span className="pill mana" title="Мана — валюта магазина">
+                <span className="mana-orb sm" />
+                {game.game.mana}
+              </span>
+            )}
           </NavLink>
 
           <NavLink to="/cards" className="nav-link group-start">
             <NavIcon name="cards" />
             <span>Карточки</span>
-            <span className="pill ghost">{cards.length}</span>
           </NavLink>
           <NavLink to="/settings" className="nav-link">
             <NavIcon name="settings" />
@@ -269,19 +263,14 @@ export function App({ banner, onNavigate }: { banner?: ReactNode; onNavigate?: (
           </NavLink>
         </nav>
 
-        <div className="sidebar-foot">
-          {game && <GameBadge game={game} />}
-          <div className="legend">
-            <span className="pill gen">сгенерировано</span>
-            <span className="pill notes">из конспектов</span>
-            <span className="pill manual">свои</span>
-          </div>
-          <SkyPicker settings={sky} resolved={resolved} onChange={changeSky} />
-        </div>
+        <div className="sidebar-foot">{game && <GameBadge game={game} />}</div>
       </aside>
 
       <main className="main">
         {banner}
+        {inProgress && <SectionTabs label="Прогресс" items={progressTabs} />}
+        {/* Вопросы ревьюера живут на дословных репликах интервьюеров — без них вкладка пуста */}
+        {inCheck && asked > 0 && <SectionTabs label="Проверка" items={checkTabs} />}
         <Routes>
           {/* Есть программа — приложение открывается на плане, обзор уходит на свой адрес */}
           <Route path="/" element={program ? <Program data={data} /> : <Dashboard data={data} />} />

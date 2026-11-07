@@ -1,17 +1,21 @@
 import { useState } from 'react'
+import { areasOf } from '../../shared/topics.js'
 import { api, DEMO } from '../api'
+import { SkyPicker } from '../components/SkyPicker'
 import type { AppData } from '../App'
 
 export function Settings({ data }: { data: AppData }) {
   const [dir, setDir] = useState(data.config.notesDir)
   const [newPerDay, setNewPerDay] = useState(data.config.newPerDay)
   const [maxReviews, setMaxReviews] = useState(data.config.maxReviewsPerDay)
+  /** null — поле не трогали: на прямом заходе состояние игры приходит позже конфига. */
+  const [goal, setGoal] = useState<number | null>(null)
   const [check, setCheck] = useState<{ ok: boolean; message: string; resolved?: string } | null>(null)
   const [busy, setBusy] = useState(false)
   /** Пустой путь — признак того, что читаются конспекты внутри приложения. */
   const bundled = !data.config.notesDir.trim()
 
-  const topics = [...new Map(data.cards.map((c) => [c.topic, c.topicTitle])).entries()]
+  const topics = areasOf(data.cards)
 
   return (
     <>
@@ -122,7 +126,18 @@ export function Settings({ data }: { data: AppData }) {
       <div className="card-surface">
         <div className="row">
           <div className="field" style={{ flex: 1 }}>
-            <label>Новых карточек в день</label>
+            <label>Цель дня, шагов</label>
+            <input
+              type="number"
+              min={1}
+              max={200}
+              value={goal ?? data.game?.game.daily.goal ?? ''}
+              onChange={(e) => setGoal(Number(e.target.value))}
+            />
+            <p className="hint">Шаг — разобранная карточка или прочитанный раздел конспекта.</p>
+          </div>
+          <div className="field" style={{ flex: 1 }}>
+            <label>Лимит новых карточек в день</label>
             <input
               type="number"
               min={0}
@@ -131,11 +146,11 @@ export function Settings({ data }: { data: AppData }) {
               onChange={(e) => setNewPerDay(Number(e.target.value))}
             />
             <p className="hint">
-              Определяет темп. 15 в день — примерно 25–35 минут занятий, включая повторения.
+              Сколько новых карточек может попасть в очередь. На цель дня не влияет.
             </p>
           </div>
           <div className="field" style={{ flex: 1 }}>
-            <label>Максимум повторений в день</label>
+            <label>Лимит повторений в день</label>
             <input
               type="number"
               min={10}
@@ -150,12 +165,21 @@ export function Settings({ data }: { data: AppData }) {
           className="btn primary"
           onClick={async () => {
             await api.setConfig({ newPerDay, maxReviewsPerDay: maxReviews })
+            if (goal && goal !== data.game?.game.daily.goal) {
+              await api.setGoal(Math.min(200, Math.max(1, goal)))
+            }
+            setGoal(null)
             await data.reload()
-            data.toast('Лимиты сохранены')
+            data.toast('Нагрузка сохранена')
           }}
         >
-          Сохранить лимиты
+          Сохранить
         </button>
+      </div>
+
+      <h2>Оформление</h2>
+      <div className="card-surface">
+        <SkyPicker settings={data.sky.settings} resolved={data.sky.resolved} onChange={data.sky.change} />
       </div>
 
       <h2>Как работает расписание</h2>
